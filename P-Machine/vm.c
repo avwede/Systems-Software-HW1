@@ -137,15 +137,42 @@ int main(int argc, char *argv[])
       {
         case 0:
           // RTN
+          SP = BP + 1;
+          BP = PAS[SP - 2];
+          PC = PAS[SP - 3];
           break;
         case 1:
           // NEG
+          if (BP == GP)
+          {
+            PAS[DP] *= -1;
+          }
+          else
+          {
+            PAS[SP] *= -1;
+          }
           break;
         case 2:
           // ADD
+          if (BP == GP) 
+          {
+            PAS[--DP] = PAS[DP] + PAS[DP + 1];
+          }
+          else 
+          {
+            PAS[++SP] = PAS[SP] + PAS[SP - 1];
+          }
           break;
         case 3:
           // SUB
+          if (BP == GP) 
+          {
+            PAS[--DP] = PAS[DP] - PAS[DP + 1];
+          }
+          else
+          {
+            PAS[++SP] = PAS[SP] - PAS[SP - 1];
+          }
           break;
         case 4:
           // MUL
