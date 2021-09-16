@@ -43,7 +43,7 @@ void print_execution(int line, char *opname, int *IR, int PC, int BP, int SP, in
 
 int main(int argc, char *argv[])
 {
-  int BP, SP, PC, DP, GP, FREE, IC = 0;
+  int BP, SP, PC, DP, GP, FREE, IC = 0, HALT = 0;
   int OP, L, M;
   int index = 0;
   int IR[INSTRUCTION_FIELDS];
@@ -100,57 +100,157 @@ int main(int argc, char *argv[])
   }
 
   // Run the main program
-
-  while (PC < IC)
+  while (PC < IC && !HALT)
   {
-    // int OP, L, M;
 
-    // fetch_instruction(PAS, *PC, &OP, &L, &M);
+    // Fetch the instruction from text
     OP = PAS[PC];
     L = PAS[PC + 1];
     M = PAS[PC + 2];
 
     PC += 3;
 
-    // load_instruction_register(IR, OP, L, M);
-
+    // Load the instruction into the register
     IR[0] = OP;
     IR[1] = L;
     IR[2] = M;
-    // execute_instruction(BP, SP, PC, DP, GP, FREE, IC, IR);
 
-    printf("in\n");
+    // Execute the instruction in the register
     switch (IR[0])
     {
     case 1:
       // LIT
+      if (BP == GP)
+      {
+        PAS[++DP] = IR[2];
+      }
+
+      else
+      {
+        PAS[--SP] = IR[2];
+      }
+
       break;
     case 2:
       // OPR
       break;
     case 3:
       // LOD
+      if (BP == GP)
+      {
+        PAS[++DP] = PAS[GP + IR[2]];
+        break;
+      }
+
+      else if (base(IR[1], BP, PAS) == GP)
+      {
+        PAS[--SP] = PAS[GP + IR[2]];
+      }
+
+      else
+      {
+        PAS[--SP] = PAS[base(IR[1], BP, PAS) - IR[2]];
+      }
+
       break;
     case 4:
       // STO
+      if (BP == GP)
+      {
+        PAS[++DP] = PAS[GP + IR[2]];
+      }
+
+      else if (base(IR[1], BP, PAS) == GP)
+      {
+        PAS[GP + IR[2]] = PAS[SP++];
+      }
+
+      else
+      {
+        PAS[base(IR[1], BP, PAS) - IR[2]] = PAS[SP++];
+      }
+
       break;
     case 5:
       // CAL
+      PAS[SP - 1] = base(L, BP, PAS);
+      PAS[SP - 2] = BP;
+      PAS[SP - 3] = PC;
+      BP = SP - 1;
+      PC = IR[2];
       break;
     case 6:
       // INC
+      if (BP == GP)
+      {
+        DP += IR[2];
+      }
+
+      else
+      {
+        SP -= IR[2];
+      }
       break;
     case 7:
       // JMP
+      PC = 3 * IR[2];
       break;
     case 8:
       // JPC
+      if (BP == GP)
+      {
+        if (PAS[DP] == 0)
+        {
+          PC = 3 * IR[2];
+        }
+
+        --DP;
+      }
+
+      else
+      {
+        if (PAS[SP] == 0)
+        {
+          PC = 3 * IR[2];
+        }
+
+        ++SP;
+      }
       break;
     case 9:
       // SYS
+      switch (IR[2])
+      {
+        case 1:
+          if (BP == GP)
+          {
+            printf("%d", PAS[DP--]);
+          }
+
+          else
+          {
+            printf("%d", PAS[SP++]);
+          }
+          break;
+
+        case 2:
+          if (BP == GP)
+          {
+            scanf("%d", &PAS[++DP]);
+          }
+          else
+          {
+            scanf("%d", &PAS[--SP]);
+          }
+          break;
+
+        default:
+          HALT = 1;
+      }
       break;
     default:
       // INVALID INSTRUCTION
+      HALT = 1;
       break;
     }
   }
