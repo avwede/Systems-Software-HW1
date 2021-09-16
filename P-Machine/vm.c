@@ -133,6 +133,52 @@ int main(int argc, char *argv[])
       break;
     case 2:
       // OPR
+      switch (IR[2])
+      {
+        case 0:
+          // RTN
+          break;
+        case 1:
+          // NEG
+          break;
+        case 2:
+          // ADD
+          break;
+        case 3:
+          // SUB
+          break;
+        case 4:
+          // MUL
+          break;
+        case 5:
+          // DIV
+          break;
+        case 6:
+          // ODD
+          break;
+        case 7:
+          // MOD
+          break;
+        case 8:
+          // EQL
+          break;
+        case 9:
+          // NEQ
+          break;
+        case 10:
+          // LSS
+          break;
+        case 11: 
+          // LEQ
+          break;
+        case 12:
+          // GTR
+          break;
+        case 13:
+          // GEQ
+          break;
+      }
+      
       break;
     case 3:
       // LOD
