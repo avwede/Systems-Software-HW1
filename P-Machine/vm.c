@@ -5,10 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-int fetch_instruction();
-int instruction_decode();
-int execute_instruction();
-
 const int MAX_PAS_LENGTH = 500;
 const int INSTRUCTION_FIELDS = 3;
 
@@ -70,6 +66,8 @@ void load_text(int *PAS, FILE *text, int *IC)
 
 void initialize_CPU_registers(int *BP, int *SP, int *PC, int *DP, int *GP, int *FREE, int *IC, int *IR)
 {
+  int i;
+
   // Initialize each register appropriately
   *GP = *IC;
   *DP = *IC - 1;
@@ -78,9 +76,42 @@ void initialize_CPU_registers(int *BP, int *SP, int *PC, int *DP, int *GP, int *
   *SP = MAX_PAS_LENGTH;
 
   // Fill the Instruction Register with zeros
-  for (int i = 0; i < INSTRUCTION_FIELDS; i++)
+  for (i = 0; i < INSTRUCTION_FIELDS; i++)
   {
     IR[i] = 0;
+  }
+}
+
+void load_instruction_register(int *IR, int OP, int L, int M)
+{
+  IR[0] = OP;
+  IR[1] = L;
+  IR[2] = M;
+}
+
+void fetch_instruction(int *PAS, int PC, int *OP, int *L, int *M)
+{
+  *OP = PAS[PC];
+  *L = PAS[PC + 1];
+  *M = PAS[PC + 2];
+}
+
+void execute_instruction(int *BP, int *SP, int *PC, int *DP, int *GP, int *FREE, int *IC, int *IR)
+{
+  // TODO
+}
+
+void run_program(int *PAS, int *BP, int *SP, int *PC, int *DP, int *GP, int *FREE, int *IC, int *IR)
+{
+  while (*PC < *IC)
+  {
+    int OP, L, M;
+
+    fetch_instruction(PAS, *PC, &OP, &L, &M);
+    *PC += 3;
+
+    load_instruction_register(IR, OP, L, M);
+    execute_instruction(BP, SP, PC, DP, GP, FREE, IC, IR);
   }
 }
 
@@ -88,6 +119,7 @@ int main(int argc, char *argv[])
 {
   int BP, SP, PC, DP, GP, FREE, IC = 0;
   int IR[INSTRUCTION_FIELDS];
+  int *PAS = (int *)calloc(MAX_PAS_LENGTH, sizeof(int));
 
   if (argc != 2)
   {
@@ -95,13 +127,13 @@ int main(int argc, char *argv[])
     return 1;
   }
 
-  int *PAS = (int *)calloc(MAX_PAS_LENGTH, sizeof(int));
-
   char *filename = argv[1];
   FILE *text = fopen(filename, "r");
 
   load_text(PAS, text, &IC);
   initialize_CPU_registers(&BP, &SP, &PC, &DP, &GP, &FREE, &IC, IR);
+
+  run_program(PAS, &BP, &SP, &PC, &DP, &GP, &FREE, &IC, IR);
 
   return 0;
 }
