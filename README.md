@@ -9,3 +9,5 @@
 ## Part 1 - (PM/0-Machine)
 
 [P-Machine Documentation](./Resources/P-Machine_Documentation.pdf)
+How to run the VM:
+1. 
