@@ -9,61 +9,86 @@ int fetch_instruction();
 int instruction_decode();
 int execute_instruction();
 
-// int base(int L)
-// {
-//   int arb = BP;
-//   while (L > 0)
-//   {
-//     arb = pas[arb];
-//     L--;
-//   }
-
-//   return arb;
-// }
-
-// void print_execution(int line, char *opname, int *IR, int PC, int BP, int SP, int DP, int *pas, int GP)
-// {
-//   int i;
-
-//   // print out instruction and registers
-//   printf("%2d\t%s\t%d\t%d\t%d\t%d\t%d\t%d\t", line, opname, IR[1], IR[2], PC, BP, SP, DP);
-
-//   // print data section
-//   for (i = GP; i <= DP; i++)
-//     printf("%d ", pas[i]);
-
-//   printf("\n");
-
-//   // print stack
-//   printf("\tstack : ");
-//   for (i = MAX_PAS_LENGTH - 1; i >= SP; i--)
-//     printf("%d ", pas[i]);
-
-//   printf("\n");
-// }
-
 const int MAX_PAS_LENGTH = 500;
+const int INSTRUCTION_FIELDS = 3;
 
-int load_text(int *PAS, FILE *text)
+int base(int L, int BP, int *PAS)
+{
+  int arb = BP;
+  while (L > 0)
+  {
+    arb = PAS[arb];
+    L--;
+  }
+
+  return arb;
+}
+
+void print_execution(int line, char *opname, int *IR, int PC, int BP, int SP, int DP, int *pas, int GP)
+{
+  int i;
+
+  // print out instruction and registers
+  printf("%2d\t%s\t%d\t%d\t%d\t%d\t%d\t%d\t", line, opname, IR[1], IR[2], PC, BP, SP, DP);
+
+  // print data section
+  for (i = GP; i <= DP; i++)
+    printf("%d ", pas[i]);
+
+  printf("\n");
+
+  // print stack
+  printf("\tstack : ");
+  for (i = MAX_PAS_LENGTH - 1; i >= SP; i--)
+    printf("%d ", pas[i]);
+
+  printf("\n");
+}
+
+void load_text(int *PAS, FILE *text, int *IC)
 {
   char buffer[50];
   int index = 0;
+
+  // Fetch every line in file
   while (fgets(buffer, sizeof(buffer), text) != NULL)
   {
+    // Split each line into respective instruction fields
     int OP = atoi(strtok(buffer, " "));
     int L = atoi(strtok(NULL, " "));
     int M = atoi(strtok(NULL, " "));
 
+    // Store instruction into the text portion of the PAS
     PAS[index++] = OP;
     PAS[index++] = L;
     PAS[index++] = M;
-  }
 
-  return index;
+    // Increment Instruction Counter by 3
+    *IC += 3;
+  }
+}
+
+void initialize_CPU_registers(int *BP, int *SP, int *PC, int *DP, int *GP, int *FREE, int *IC, int *IR)
+{
+  // Initialize each register appropriately
+  *GP = *IC;
+  *DP = *IC - 1;
+  *FREE = *IC + 40;
+  *BP = *IC;
+  *SP = MAX_PAS_LENGTH;
+
+  // Fill the Instruction Register with zeros
+  for (int i = 0; i < INSTRUCTION_FIELDS; i++)
+  {
+    IR[i] = 0;
+  }
 }
 
 int main(int argc, char *argv[])
 {
+  int BP, SP, PC, DP, GP, FREE, IC = 0;
+  int IR[INSTRUCTION_FIELDS];
+
   if (argc != 2)
   {
     printf("Error: Incorrect amount of commands (2)!");
@@ -75,7 +100,8 @@ int main(int argc, char *argv[])
   char *filename = argv[1];
   FILE *text = fopen(filename, "r");
 
-  int text_end = load_text(PAS, text);
+  load_text(PAS, text, &IC);
+  initialize_CPU_registers(&BP, &SP, &PC, &DP, &GP, &FREE, &IC, IR);
 
   return 0;
 }
