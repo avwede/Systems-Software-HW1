@@ -9,6 +9,7 @@
 ## Part 1 - (PM/0-Machine)
 
 [P-Machine Documentation](./Resources/P-Machine_Documentation.pdf)  
+
 How to run the VM:  
 1. Clone the repository to your local machine
 2. Connect to Eustis3
