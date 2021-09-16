@@ -41,18 +41,38 @@ void print_execution(int line, char *opname, int *IR, int PC, int BP, int SP, in
   printf("\n");
 }
 
-void load_text(int *PAS, FILE *text, int *IC)
+int main(int argc, char *argv[])
 {
-  char buffer[50];
+  int BP, SP, PC, DP, GP, FREE, IC = 0;
+  int OP, L, M;
   int index = 0;
+  int IR[INSTRUCTION_FIELDS];
+  int *PAS = (int *)calloc(MAX_PAS_LENGTH, sizeof(int));
+  char buffer[50];
+
+  char *filename;
+  FILE *text;
+
+  // Command line argument check
+  if (argc != 2)
+  {
+    printf("Syntax: %s <input file>\n", argv[0]);
+    free(PAS);
+    return 1;
+  }
+
+  filename = argv[1];
+  text = fopen(filename, "r");
+
+  // Load the program from the file
 
   // Fetch every line in file
   while (fgets(buffer, sizeof(buffer), text) != NULL)
   {
     // Split each line into respective instruction fields
-    int OP = atoi(strtok(buffer, " "));
-    int L = atoi(strtok(NULL, " "));
-    int M = atoi(strtok(NULL, " "));
+    OP = atoi(strtok(buffer, " "));
+    L = atoi(strtok(NULL, " "));
+    M = atoi(strtok(NULL, " "));
 
     // Store instruction into the text portion of the PAS
     PAS[index++] = OP;
@@ -60,112 +80,81 @@ void load_text(int *PAS, FILE *text, int *IC)
     PAS[index++] = M;
 
     // Increment Instruction Counter by 3
-    *IC += 3;
+    IC += 3;
   }
-}
+  fclose(text);
 
-void initialize_CPU_registers(int *BP, int *SP, int *PC, int *DP, int *GP, int *FREE, int *IC, int *IR)
-{
-  int i;
+  // Initialize CPU registers
 
   // Initialize each register appropriately
-  *GP = *IC;
-  *DP = *IC - 1;
-  *FREE = *IC + 40;
-  *BP = *IC;
-  *SP = MAX_PAS_LENGTH;
+  GP = IC;
+  DP = IC - 1;
+  FREE = IC + 40;
+  BP = IC;
+  SP = MAX_PAS_LENGTH;
 
   // Fill the Instruction Register with zeros
-  for (i = 0; i < INSTRUCTION_FIELDS; i++)
+  for (index = 0; index < INSTRUCTION_FIELDS; index++)
   {
-    IR[i] = 0;
-  }
-}
-
-void load_instruction_register(int *IR, int OP, int L, int M)
-{
-  IR[0] = OP;
-  IR[1] = L;
-  IR[2] = M;
-}
-
-void fetch_instruction(int *PAS, int PC, int *OP, int *L, int *M)
-{
-  *OP = PAS[PC];
-  *L = PAS[PC + 1];
-  *M = PAS[PC + 2];
-}
-
-void execute_instruction(int *BP, int *SP, int *PC, int *DP, int *GP, int *FREE, int *IC, int *IR)
-{
-  switch (IR[0])
-  {
-  case 1:
-    // LIT
-    break;
-  case 2:
-    // OPR
-    break;
-  case 3:
-    // LOD
-    break;
-  case 4:
-    // STO
-    break;
-  case 5:
-    // CAL
-    break;
-  case 6:
-    // INC
-    break;
-  case 7:
-    // JMP
-    break;
-  case 8:
-    // JPC
-    break;
-  case 9:
-    // SYS
-    break;
-  default:
-    // INVALID INSTRUCTION
-    break;
-  }
-}
-
-void run_program(int *PAS, int *BP, int *SP, int *PC, int *DP, int *GP, int *FREE, int *IC, int *IR)
-{
-  while (*PC < *IC)
-  {
-    int OP, L, M;
-
-    fetch_instruction(PAS, *PC, &OP, &L, &M);
-    *PC += 3;
-
-    load_instruction_register(IR, OP, L, M);
-    execute_instruction(BP, SP, PC, DP, GP, FREE, IC, IR);
-  }
-}
-
-int main(int argc, char *argv[])
-{
-  int BP, SP, PC, DP, GP, FREE, IC = 0;
-  int IR[INSTRUCTION_FIELDS];
-  int *PAS = (int *)calloc(MAX_PAS_LENGTH, sizeof(int));
-
-  if (argc != 2)
-  {
-    printf("Error: Incorrect amount of commands (2)!");
-    return 1;
+    IR[index] = 0;
   }
 
-  char *filename = argv[1];
-  FILE *text = fopen(filename, "r");
+  // Run the main program
 
-  load_text(PAS, text, &IC);
-  initialize_CPU_registers(&BP, &SP, &PC, &DP, &GP, &FREE, &IC, IR);
+  while (PC < IC)
+  {
+    // int OP, L, M;
 
-  run_program(PAS, &BP, &SP, &PC, &DP, &GP, &FREE, &IC, IR);
+    // fetch_instruction(PAS, *PC, &OP, &L, &M);
+    OP = PAS[PC];
+    L = PAS[PC + 1];
+    M = PAS[PC + 2];
 
+    PC += 3;
+
+    // load_instruction_register(IR, OP, L, M);
+
+    IR[0] = OP;
+    IR[1] = L;
+    IR[2] = M;
+    // execute_instruction(BP, SP, PC, DP, GP, FREE, IC, IR);
+
+    printf("in\n");
+    switch (IR[0])
+    {
+    case 1:
+      // LIT
+      break;
+    case 2:
+      // OPR
+      break;
+    case 3:
+      // LOD
+      break;
+    case 4:
+      // STO
+      break;
+    case 5:
+      // CAL
+      break;
+    case 6:
+      // INC
+      break;
+    case 7:
+      // JMP
+      break;
+    case 8:
+      // JPC
+      break;
+    case 9:
+      // SYS
+      break;
+    default:
+      // INVALID INSTRUCTION
+      break;
+    }
+  }
+
+  free(PAS);
   return 0;
 }
