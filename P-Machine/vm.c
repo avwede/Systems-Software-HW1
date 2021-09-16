@@ -98,7 +98,39 @@ void fetch_instruction(int *PAS, int PC, int *OP, int *L, int *M)
 
 void execute_instruction(int *BP, int *SP, int *PC, int *DP, int *GP, int *FREE, int *IC, int *IR)
 {
-  // TODO
+  switch (IR[0])
+  {
+  case 1:
+    // LIT
+    break;
+  case 2:
+    // OPR
+    break;
+  case 3:
+    // LOD
+    break;
+  case 4:
+    // STO
+    break;
+  case 5:
+    // CAL
+    break;
+  case 6:
+    // INC
+    break;
+  case 7:
+    // JMP
+    break;
+  case 8:
+    // JPC
+    break;
+  case 9:
+    // SYS
+    break;
+  default:
+    // INVALID INSTRUCTION
+    break;
+  }
 }
 
 void run_program(int *PAS, int *BP, int *SP, int *PC, int *DP, int *GP, int *FREE, int *IC, int *IR)
