@@ -43,7 +43,7 @@ void print_execution(int line, char *opname, int *IR, int PC, int BP, int SP, in
 
 int main(int argc, char *argv[])
 {
-  int BP, SP, PC, DP, GP, FREE, IC = 0, HALT = 0;
+  int BP, SP, PC, DP, GP, FREE, IC = 0, HALT = 1;
   int OP, L, M;
   int index = 0;
   int IR[INSTRUCTION_FIELDS];
@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
   }
 
   // Run the main program
-  while (PC < IC && !HALT)
+  while (PC < IC && HALT)
   {
     // Fetch the instruction from text
     OP = PAS[PC];
@@ -396,12 +396,12 @@ int main(int argc, char *argv[])
           break;
 
         default:
-          HALT = 1;
+          HALT = 0;
       }
       break;
     default:
       // INVALID INSTRUCTION
-      HALT = 1;
+      HALT = 0;
       break;
     }
   }
