@@ -43,12 +43,13 @@ void print_execution(int line, char *opname, int *IR, int PC, int BP, int SP, in
 
 int main(int argc, char *argv[])
 {
-  int BP, SP, PC, DP, GP, FREE, IC = 0, HALT = 1;
+  int BP, SP, PC = 0, DP, GP, FREE, IC = 0, HALT = 1;
   int OP, L, M;
-  int index = 0;
+  int index = 0, line = 0;
   int IR[INSTRUCTION_FIELDS];
   int *PAS = (int *)calloc(MAX_PAS_LENGTH, sizeof(int));
   char buffer[50];
+  char opCode[4];
 
   char *filename;
   FILE *text;
@@ -99,20 +100,20 @@ int main(int argc, char *argv[])
     IR[index] = 0;
   }
 
+  printf("\t\t\t\tPC\tBP\tSP\tDP\tdata\n");
+  printf("Initial values:\t\t\t%d\t%d\t%d\t%d\n", PC, BP, SP, DP);
+
   // Run the main program
   while (PC < IC && HALT)
   {
     // Fetch the instruction from text
-    OP = PAS[PC];
-    L = PAS[PC + 1];
-    M = PAS[PC + 2];
-
-    PC += 3;
-
     // Load the instruction into the register
-    IR[0] = OP;
-    IR[1] = L;
-    IR[2] = M;
+    IR[0] = PAS[PC];
+    IR[1] = PAS[PC+1];
+    IR[2] = PAS[PC+2];
+
+    line = PC/3;
+    PC += 3;
 
     // Execute the instruction in the register
     switch (IR[0])
@@ -129,6 +130,8 @@ int main(int argc, char *argv[])
         PAS[--SP] = IR[2];
       }
 
+      print_execution(line, "LIT", IR, PC, BP, SP, DP, PAS, GP);
+
       break;
     case 2:
       // OPR
@@ -136,12 +139,14 @@ int main(int argc, char *argv[])
       {
         case 0:
           // RTN
+          strcpy(opCode, "RTN");
           SP = BP + 1;
           BP = PAS[SP - 2];
           PC = PAS[SP - 3];
           break;
         case 1:
           // NEG
+          strcpy(opCode, "NEG");
           if (BP == GP)
           {
             PAS[DP] *= -1;
@@ -153,50 +158,63 @@ int main(int argc, char *argv[])
           break;
         case 2:
           // ADD
+          strcpy(opCode, "ADD");
           if (BP == GP) 
           {
-            PAS[--DP] = PAS[DP] + PAS[DP + 1];
+            DP--;
+            PAS[DP] = PAS[DP] + PAS[DP + 1];
           }
           else 
           {
-            PAS[++SP] = PAS[SP] + PAS[SP - 1];
+            SP++;
+            PAS[SP] = PAS[SP] + PAS[SP - 1];
           }
           break;
         case 3:
           // SUB
+          strcpy(opCode, "SUB");
           if (BP == GP) 
           {
-            PAS[--DP] = PAS[DP] - PAS[DP + 1];
+            DP--;
+            PAS[DP] = PAS[DP] - PAS[DP + 1];
           }
           else
           {
-            PAS[++SP] = PAS[SP] - PAS[SP - 1];
+            SP++;
+            PAS[SP] = PAS[SP] - PAS[SP - 1];
           }
           break;
         case 4:
           // MUL
+          strcpy(opCode, "MUL");
           if (BP == GP)
           {
-            PAS[--DP] = PAS[DP] * PAS[DP + 1];
+            DP--;
+            PAS[DP] = PAS[DP] * PAS[DP + 1];
           }
           else
           {
-            PAS[++SP] = PAS[SP] * PAS[SP - 1];
+            SP++;
+            PAS[SP] = PAS[SP] * PAS[SP - 1];
           }
           break;
         case 5:
           // DIV
+          strcpy(opCode, "DIV");
           if (BP == GP)
           {
-            PAS[--DP] = PAS[DP] / PAS[DP + 1];
+            DP--;
+            PAS[DP] = PAS[DP] / PAS[DP + 1];
           }
           else 
           {
-            PAS[++SP] = PAS[SP] / PAS[SP - 1];
+            SP++;
+            PAS[SP] = PAS[SP] / PAS[SP - 1];
           }
           break;
         case 6:
           // ODD
+          strcpy(opCode, "ODD");
           if (BP == GP) 
           {
             PAS[DP] = PAS[DP] % 2;
@@ -208,83 +226,105 @@ int main(int argc, char *argv[])
           break;
         case 7:
           // MOD
+          strcpy(opCode, "MOD");
           if (BP == GP)
           {
-            PAS[--DP] = PAS[DP] % PAS[DP + 1];
+            DP--;
+            PAS[DP] = PAS[DP] % PAS[DP + 1];
           }
           else 
           {
-            PAS[++SP] = PAS[SP] % PAS[SP - 1];
+            SP++;
+            PAS[SP] = PAS[SP] % PAS[SP - 1];
           }
           break;
         case 8:
           // EQL
+          strcpy(opCode, "EQL");
           if (BP == GP) 
           {
-            PAS[--DP] = ((PAS[DP] == PAS[DP + 1]) ? 1 : 0);
+            DP--;
+            PAS[DP] = ((PAS[DP] == PAS[DP + 1]) ? 1 : 0);
           }
           else 
           {
-            PAS[++SP] = ((PAS[SP] == PAS[SP - 1]) ? 1 : 0);
+            SP++;
+            PAS[SP] = ((PAS[SP] == PAS[SP - 1]) ? 1 : 0);
           }
           break;
         case 9:
           // NEQ
+          strcpy(opCode, "NEQ");
           if (BP == GP)
           {
-            PAS[--DP] = ((PAS[DP] != PAS[DP + 1]) ? 1 : 0);
+            DP--;
+            PAS[DP] = ((PAS[DP] != PAS[DP + 1]) ? 1 : 0);
           }
           else 
           {
-            PAS[++SP] = ((PAS[SP] != PAS[SP - 1]) ? 1 : 0);
+            SP++;
+            PAS[SP] = ((PAS[SP] != PAS[SP - 1]) ? 1 : 0);
           }
           break;
         case 10:
           // LSS
+          strcpy(opCode, "LSS");
           if (BP == GP)
           {
-            PAS[--DP] = ((PAS[DP] < PAS[DP + 1]) ? 1 : 0);
+            DP--;
+            PAS[DP] = ((PAS[DP] < PAS[DP + 1]) ? 1 : 0);
           }
           else 
           {
-            PAS[++SP] = ((PAS[SP] < PAS[SP - 1]) ? 1 : 0);
+            SP++;
+            PAS[SP] = ((PAS[SP] < PAS[SP - 1]) ? 1 : 0);
           }
           break;
         case 11: 
           // LEQ
+          strcpy(opCode, "LEQ");
           if (BP == GP)
           {
-            PAS[--DP] = ((PAS[DP] <= PAS[DP + 1]) ? 1 : 0);
+            DP--;
+            PAS[DP] = ((PAS[DP] <= PAS[DP + 1]) ? 1 : 0);
           }
           else 
           {
-            PAS[++SP] = ((PAS[SP] <= PAS[SP - 1]) ? 1 : 0);
+            SP++;
+            PAS[SP] = ((PAS[SP] <= PAS[SP - 1]) ? 1 : 0);
           }
           break;
         case 12:
           // GTR
+          strcpy(opCode, "GTR");
           if (BP == GP)
           {
-            PAS[--DP] = ((PAS[DP] > PAS[DP + 1]) ? 1 : 0);
+            DP--;
+            PAS[DP] = ((PAS[DP] > PAS[DP + 1]) ? 1 : 0);
           }
           else 
           {
-            PAS[++SP] = ((PAS[SP] > PAS[SP - 1]) ? 1 : 0);
+            SP++;
+            PAS[SP] = ((PAS[SP] > PAS[SP - 1]) ? 1 : 0);
           }
           break;
         case 13:
           // GEQ
+          strcpy(opCode, "GEQ");
           if (BP == GP)
           {
-            PAS[--DP] = ((PAS[DP] >= PAS[DP + 1]) ? 1 : 0);
+            DP--;
+            PAS[DP] = ((PAS[DP] >= PAS[DP + 1]) ? 1 : 0);
           }
           else 
           {
-            PAS[++SP] = ((PAS[SP] >= PAS[SP - 1]) ? 1 : 0);
+            SP++;
+            PAS[SP] = ((PAS[SP] >= PAS[SP - 1]) ? 1 : 0);
           }
+
           break;
       }
-      
+      print_execution(line, opCode, IR, PC, BP, SP, DP, PAS, GP);
       break;
     case 3:
       // LOD
@@ -303,6 +343,7 @@ int main(int argc, char *argv[])
         PAS[--SP] = PAS[base(IR[1], BP, PAS) - IR[2]];
       }
 
+      print_execution(line, "LOD", IR, PC, BP, SP, DP, PAS, GP);
       break;
     case 4:
       // STO
@@ -321,6 +362,7 @@ int main(int argc, char *argv[])
         PAS[base(IR[1], BP, PAS) - IR[2]] = PAS[SP++];
       }
 
+      print_execution(line, "STO", IR, PC, BP, SP, DP, PAS, GP);
       break;
     case 5:
       // CAL
@@ -329,6 +371,7 @@ int main(int argc, char *argv[])
       PAS[SP - 3] = PC;
       BP = SP - 1;
       PC = IR[2];
+      print_execution(line, "CAL", IR, PC, BP, SP, DP, PAS, GP);
       break;
     case 6:
       // INC
@@ -340,11 +383,13 @@ int main(int argc, char *argv[])
       else
       {
         SP -= IR[2];
-      }
+      }      
+      print_execution(line, "INC", IR, PC, BP, SP, DP, PAS, GP);
       break;
     case 7:
       // JMP
       PC = IR[2];
+      print_execution(line, "JMP", IR, PC, BP, SP, DP, PAS, GP);
       break;
     case 8:
       // JPC
@@ -367,24 +412,27 @@ int main(int argc, char *argv[])
 
         ++SP;
       }
+      print_execution(line, "JPC", IR, PC, BP, SP, DP, PAS, GP);
       break;
     case 9:
       // SYS
       switch (IR[2])
       {
         case 1:
+          printf("Top of stack value: ");
           if (BP == GP)
           {
-            printf("%d", PAS[DP--]);
+            printf("%d\n", PAS[DP--]);
           }
 
           else
           {
-            printf("%d", PAS[SP++]);
+            printf("%d\n", PAS[SP++]);
           }
           break;
 
         case 2:
+          printf("Please enter an integer: ");
           if (BP == GP)
           {
             scanf("%d", &PAS[++DP]);
@@ -398,6 +446,7 @@ int main(int argc, char *argv[])
         default:
           HALT = 0;
       }
+      print_execution(line, "SYS", IR, PC, BP, SP, DP, PAS, GP);
       break;
     default:
       // INVALID INSTRUCTION
