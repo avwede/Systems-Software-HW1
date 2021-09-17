@@ -43,7 +43,7 @@ void print_execution(int line, char *opname, int *IR, int PC, int BP, int SP, in
 
 int main(int argc, char *argv[])
 {
-  int BP, SP, PC = 0, DP, GP, FREE, IC = 0, HALT = 1;
+  int BP = 0, SP = 0, PC = 0, DP = 0, GP = 0, FREE = 0, IC = 0, HALT = 1;
   int OP, L, M;
   int index = 0, line = 0;
   int IR[INSTRUCTION_FIELDS];
