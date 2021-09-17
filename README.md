@@ -15,4 +15,4 @@ How to run the VM:
 2. Connect to Eustis3
 3. Change directory into the P-Machine folder
 4. Compile vm.c in the command line using gcc 
-5. 
+5. Run the testcases using ./a.out input.txt
