@@ -102,7 +102,6 @@ int main(int argc, char *argv[])
   // Run the main program
   while (PC < IC && !HALT)
   {
-
     // Fetch the instruction from text
     OP = PAS[PC];
     L = PAS[PC + 1];
@@ -292,7 +291,6 @@ int main(int argc, char *argv[])
       if (BP == GP)
       {
         PAS[++DP] = PAS[GP + IR[2]];
-        break;
       }
 
       else if (base(IR[1], BP, PAS) == GP)
@@ -346,7 +344,7 @@ int main(int argc, char *argv[])
       break;
     case 7:
       // JMP
-      PC = 3 * IR[2];
+      PC = IR[2];
       break;
     case 8:
       // JPC
@@ -354,7 +352,7 @@ int main(int argc, char *argv[])
       {
         if (PAS[DP] == 0)
         {
-          PC = 3 * IR[2];
+          PC = IR[2];
         }
 
         --DP;
@@ -364,7 +362,7 @@ int main(int argc, char *argv[])
       {
         if (PAS[SP] == 0)
         {
-          PC = 3 * IR[2];
+          PC = IR[2];
         }
 
         ++SP;
