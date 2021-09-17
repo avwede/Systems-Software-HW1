@@ -176,33 +176,113 @@ int main(int argc, char *argv[])
           break;
         case 4:
           // MUL
+          if (BP == GP)
+          {
+            PAS[--DP] = PAS[DP] * PAS[DP + 1];
+          }
+          else
+          {
+            PAS[++SP] = PAS[SP] * PAS[SP - 1];
+          }
           break;
         case 5:
           // DIV
+          if (BP == GP)
+          {
+            PAS[--DP] = PAS[DP] / PAS[DP + 1];
+          }
+          else 
+          {
+            PAS[++SP] = PAS[SP] / PAS[SP - 1];
+          }
           break;
         case 6:
           // ODD
+          if (BP == GP) 
+          {
+            PAS[DP] = PAS[DP] % 2;
+          }
+          else 
+          {
+            PAS[SP] = PAS[SP] % 2;
+          }
           break;
         case 7:
           // MOD
+          if (BP == GP)
+          {
+            PAS[--DP] = PAS[DP] % PAS[DP + 1];
+          }
+          else 
+          {
+            PAS[++SP] = PAS[SP] % PAS[SP - 1];
+          }
           break;
         case 8:
           // EQL
+          if (BP == GP) 
+          {
+            PAS[--DP] = ((PAS[DP] == PAS[DP + 1]) ? 1 : 0);
+          }
+          else 
+          {
+            PAS[++SP] = ((PAS[SP] == PAS[SP - 1]) ? 1 : 0);
+          }
           break;
         case 9:
           // NEQ
+          if (BP == GP)
+          {
+            PAS[--DP] = ((PAS[DP] != PAS[DP + 1]) ? 1 : 0);
+          }
+          else 
+          {
+            PAS[++SP] = ((PAS[SP] != PAS[SP - 1]) ? 1 : 0);
+          }
           break;
         case 10:
           // LSS
+          if (BP == GP)
+          {
+            PAS[--DP] = ((PAS[DP] < PAS[DP + 1]) ? 1 : 0);
+          }
+          else 
+          {
+            PAS[++SP] = ((PAS[SP] < PAS[SP - 1]) ? 1 : 0);
+          }
           break;
         case 11: 
           // LEQ
+          if (BP == GP)
+          {
+            PAS[--DP] = ((PAS[DP] <= PAS[DP + 1]) ? 1 : 0);
+          }
+          else 
+          {
+            PAS[++SP] = ((PAS[SP] <= PAS[SP - 1]) ? 1 : 0);
+          }
           break;
         case 12:
           // GTR
+          if (BP == GP)
+          {
+            PAS[--DP] = ((PAS[DP] > PAS[DP + 1]) ? 1 : 0);
+          }
+          else 
+          {
+            PAS[++SP] = ((PAS[SP] > PAS[SP - 1]) ? 1 : 0);
+          }
           break;
         case 13:
           // GEQ
+          if (BP == GP)
+          {
+            PAS[--DP] = ((PAS[DP] >= PAS[DP + 1]) ? 1 : 0);
+          }
+          else 
+          {
+            PAS[++SP] = ((PAS[SP] >= PAS[SP - 1]) ? 1 : 0);
+          }
           break;
       }
       
