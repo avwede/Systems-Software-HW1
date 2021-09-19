@@ -109,10 +109,10 @@ int main(int argc, char *argv[])
     // Fetch the instruction from text
     // Load the instruction into the register
     IR[0] = PAS[PC];
-    IR[1] = PAS[PC+1];
-    IR[2] = PAS[PC+2];
+    IR[1] = PAS[PC + 1];
+    IR[2] = PAS[PC + 2];
 
-    line = PC/3;
+    line = PC / 3;
     PC += 3;
 
     // Execute the instruction in the register
@@ -137,192 +137,192 @@ int main(int argc, char *argv[])
       // OPR
       switch (IR[2])
       {
-        case 0:
-          // RTN
-          strcpy(opCode, "RTN");
-          SP = BP + 1;
-          BP = PAS[SP - 2];
-          PC = PAS[SP - 3];
-          break;
-        case 1:
-          // NEG
-          strcpy(opCode, "NEG");
-          if (BP == GP)
-          {
-            PAS[DP] *= -1;
-          }
-          else
-          {
-            PAS[SP] *= -1;
-          }
-          break;
-        case 2:
-          // ADD
-          strcpy(opCode, "ADD");
-          if (BP == GP) 
-          {
-            DP--;
-            PAS[DP] = PAS[DP] + PAS[DP + 1];
-          }
-          else 
-          {
-            SP++;
-            PAS[SP] = PAS[SP] + PAS[SP - 1];
-          }
-          break;
-        case 3:
-          // SUB
-          strcpy(opCode, "SUB");
-          if (BP == GP) 
-          {
-            DP--;
-            PAS[DP] = PAS[DP] - PAS[DP + 1];
-          }
-          else
-          {
-            SP++;
-            PAS[SP] = PAS[SP] - PAS[SP - 1];
-          }
-          break;
-        case 4:
-          // MUL
-          strcpy(opCode, "MUL");
-          if (BP == GP)
-          {
-            DP--;
-            PAS[DP] = PAS[DP] * PAS[DP + 1];
-          }
-          else
-          {
-            SP++;
-            PAS[SP] = PAS[SP] * PAS[SP - 1];
-          }
-          break;
-        case 5:
-          // DIV
-          strcpy(opCode, "DIV");
-          if (BP == GP)
-          {
-            DP--;
-            PAS[DP] = PAS[DP] / PAS[DP + 1];
-          }
-          else 
-          {
-            SP++;
-            PAS[SP] = PAS[SP] / PAS[SP - 1];
-          }
-          break;
-        case 6:
-          // ODD
-          strcpy(opCode, "ODD");
-          if (BP == GP) 
-          {
-            PAS[DP] = PAS[DP] % 2;
-          }
-          else 
-          {
-            PAS[SP] = PAS[SP] % 2;
-          }
-          break;
-        case 7:
-          // MOD
-          strcpy(opCode, "MOD");
-          if (BP == GP)
-          {
-            DP--;
-            PAS[DP] = PAS[DP] % PAS[DP + 1];
-          }
-          else 
-          {
-            SP++;
-            PAS[SP] = PAS[SP] % PAS[SP - 1];
-          }
-          break;
-        case 8:
-          // EQL
-          strcpy(opCode, "EQL");
-          if (BP == GP) 
-          {
-            DP--;
-            PAS[DP] = ((PAS[DP] == PAS[DP + 1]) ? 1 : 0);
-          }
-          else 
-          {
-            SP++;
-            PAS[SP] = ((PAS[SP] == PAS[SP - 1]) ? 1 : 0);
-          }
-          break;
-        case 9:
-          // NEQ
-          strcpy(opCode, "NEQ");
-          if (BP == GP)
-          {
-            DP--;
-            PAS[DP] = ((PAS[DP] != PAS[DP + 1]) ? 1 : 0);
-          }
-          else 
-          {
-            SP++;
-            PAS[SP] = ((PAS[SP] != PAS[SP - 1]) ? 1 : 0);
-          }
-          break;
-        case 10:
-          // LSS
-          strcpy(opCode, "LSS");
-          if (BP == GP)
-          {
-            DP--;
-            PAS[DP] = ((PAS[DP] < PAS[DP + 1]) ? 1 : 0);
-          }
-          else 
-          {
-            SP++;
-            PAS[SP] = ((PAS[SP] < PAS[SP - 1]) ? 1 : 0);
-          }
-          break;
-        case 11: 
-          // LEQ
-          strcpy(opCode, "LEQ");
-          if (BP == GP)
-          {
-            DP--;
-            PAS[DP] = ((PAS[DP] <= PAS[DP + 1]) ? 1 : 0);
-          }
-          else 
-          {
-            SP++;
-            PAS[SP] = ((PAS[SP] <= PAS[SP - 1]) ? 1 : 0);
-          }
-          break;
-        case 12:
-          // GTR
-          strcpy(opCode, "GTR");
-          if (BP == GP)
-          {
-            DP--;
-            PAS[DP] = ((PAS[DP] > PAS[DP + 1]) ? 1 : 0);
-          }
-          else 
-          {
-            SP++;
-            PAS[SP] = ((PAS[SP] > PAS[SP - 1]) ? 1 : 0);
-          }
-          break;
-        case 13:
-          // GEQ
-          strcpy(opCode, "GEQ");
-          if (BP == GP)
-          {
-            DP--;
-            PAS[DP] = ((PAS[DP] >= PAS[DP + 1]) ? 1 : 0);
-          }
-          else 
-          {
-            SP++;
-            PAS[SP] = ((PAS[SP] >= PAS[SP - 1]) ? 1 : 0);
-          }
+      case 0:
+        // RTN
+        strcpy(opCode, "RTN");
+        SP = BP + 1;
+        BP = PAS[SP - 2];
+        PC = PAS[SP - 3];
+        break;
+      case 1:
+        // NEG
+        strcpy(opCode, "NEG");
+        if (BP == GP)
+        {
+          PAS[DP] *= -1;
+        }
+        else
+        {
+          PAS[SP] *= -1;
+        }
+        break;
+      case 2:
+        // ADD
+        strcpy(opCode, "ADD");
+        if (BP == GP)
+        {
+          DP--;
+          PAS[DP] = PAS[DP] + PAS[DP + 1];
+        }
+        else
+        {
+          SP++;
+          PAS[SP] = PAS[SP] + PAS[SP - 1];
+        }
+        break;
+      case 3:
+        // SUB
+        strcpy(opCode, "SUB");
+        if (BP == GP)
+        {
+          DP--;
+          PAS[DP] = PAS[DP] - PAS[DP + 1];
+        }
+        else
+        {
+          SP++;
+          PAS[SP] = PAS[SP] - PAS[SP - 1];
+        }
+        break;
+      case 4:
+        // MUL
+        strcpy(opCode, "MUL");
+        if (BP == GP)
+        {
+          DP--;
+          PAS[DP] = PAS[DP] * PAS[DP + 1];
+        }
+        else
+        {
+          SP++;
+          PAS[SP] = PAS[SP] * PAS[SP - 1];
+        }
+        break;
+      case 5:
+        // DIV
+        strcpy(opCode, "DIV");
+        if (BP == GP)
+        {
+          DP--;
+          PAS[DP] = PAS[DP] / PAS[DP + 1];
+        }
+        else
+        {
+          SP++;
+          PAS[SP] = PAS[SP] / PAS[SP - 1];
+        }
+        break;
+      case 6:
+        // ODD
+        strcpy(opCode, "ODD");
+        if (BP == GP)
+        {
+          PAS[DP] = PAS[DP] % 2;
+        }
+        else
+        {
+          PAS[SP] = PAS[SP] % 2;
+        }
+        break;
+      case 7:
+        // MOD
+        strcpy(opCode, "MOD");
+        if (BP == GP)
+        {
+          DP--;
+          PAS[DP] = PAS[DP] % PAS[DP + 1];
+        }
+        else
+        {
+          SP++;
+          PAS[SP] = PAS[SP] % PAS[SP - 1];
+        }
+        break;
+      case 8:
+        // EQL
+        strcpy(opCode, "EQL");
+        if (BP == GP)
+        {
+          DP--;
+          PAS[DP] = ((PAS[DP] == PAS[DP + 1]) ? 1 : 0);
+        }
+        else
+        {
+          SP++;
+          PAS[SP] = ((PAS[SP] == PAS[SP - 1]) ? 1 : 0);
+        }
+        break;
+      case 9:
+        // NEQ
+        strcpy(opCode, "NEQ");
+        if (BP == GP)
+        {
+          DP--;
+          PAS[DP] = ((PAS[DP] != PAS[DP + 1]) ? 1 : 0);
+        }
+        else
+        {
+          SP++;
+          PAS[SP] = ((PAS[SP] != PAS[SP - 1]) ? 1 : 0);
+        }
+        break;
+      case 10:
+        // LSS
+        strcpy(opCode, "LSS");
+        if (BP == GP)
+        {
+          DP--;
+          PAS[DP] = ((PAS[DP] < PAS[DP + 1]) ? 1 : 0);
+        }
+        else
+        {
+          SP++;
+          PAS[SP] = ((PAS[SP] < PAS[SP - 1]) ? 1 : 0);
+        }
+        break;
+      case 11:
+        // LEQ
+        strcpy(opCode, "LEQ");
+        if (BP == GP)
+        {
+          DP--;
+          PAS[DP] = ((PAS[DP] <= PAS[DP + 1]) ? 1 : 0);
+        }
+        else
+        {
+          SP++;
+          PAS[SP] = ((PAS[SP] <= PAS[SP - 1]) ? 1 : 0);
+        }
+        break;
+      case 12:
+        // GTR
+        strcpy(opCode, "GTR");
+        if (BP == GP)
+        {
+          DP--;
+          PAS[DP] = ((PAS[DP] > PAS[DP + 1]) ? 1 : 0);
+        }
+        else
+        {
+          SP++;
+          PAS[SP] = ((PAS[SP] > PAS[SP - 1]) ? 1 : 0);
+        }
+        break;
+      case 13:
+        // GEQ
+        strcpy(opCode, "GEQ");
+        if (BP == GP)
+        {
+          DP--;
+          PAS[DP] = ((PAS[DP] >= PAS[DP + 1]) ? 1 : 0);
+        }
+        else
+        {
+          SP++;
+          PAS[SP] = ((PAS[SP] >= PAS[SP - 1]) ? 1 : 0);
+        }
 
-          break;
+        break;
       }
       print_execution(line, opCode, IR, PC, BP, SP, DP, PAS, GP);
       break;
@@ -383,7 +383,7 @@ int main(int argc, char *argv[])
       else
       {
         SP -= IR[2];
-      }      
+      }
       print_execution(line, "INC", IR, PC, BP, SP, DP, PAS, GP);
       break;
     case 7:
@@ -418,33 +418,33 @@ int main(int argc, char *argv[])
       // SYS
       switch (IR[2])
       {
-        case 1:
-          printf("Top of stack value: ");
-          if (BP == GP)
-          {
-            printf("%d\n", PAS[DP--]);
-          }
+      case 1:
+        printf("Top of Stack Value: ");
+        if (BP == GP)
+        {
+          printf("%d\n", PAS[DP--]);
+        }
 
-          else
-          {
-            printf("%d\n", PAS[SP++]);
-          }
-          break;
+        else
+        {
+          printf("%d\n", PAS[SP++]);
+        }
+        break;
 
-        case 2:
-          printf("Please enter an integer: ");
-          if (BP == GP)
-          {
-            scanf("%d", &PAS[++DP]);
-          }
-          else
-          {
-            scanf("%d", &PAS[--SP]);
-          }
-          break;
+      case 2:
+        printf("Please Enter an Integer: ");
+        if (BP == GP)
+        {
+          scanf("%d", &PAS[++DP]);
+        }
+        else
+        {
+          scanf("%d", &PAS[--SP]);
+        }
+        break;
 
-        default:
-          HALT = 0;
+      default:
+        HALT = 0;
       }
       print_execution(line, "SYS", IR, PC, BP, SP, DP, PAS, GP);
       break;
