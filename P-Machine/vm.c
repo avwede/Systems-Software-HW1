@@ -349,17 +349,20 @@ int main(int argc, char *argv[])
       // STO
       if (BP == GP)
       {
-        PAS[++DP] = PAS[GP + IR[2]];
+        PAS[GP + IR[2]] = PAS[DP];
+        DP--;
       }
 
       else if (base(IR[1], BP, PAS) == GP)
       {
-        PAS[GP + IR[2]] = PAS[SP++];
+        PAS[GP + IR[2]] = PAS[SP];
+        SP++;
       }
 
       else
       {
-        PAS[base(IR[1], BP, PAS) - IR[2]] = PAS[SP++];
+        PAS[base(IR[1], BP, PAS) - IR[2]] = PAS[SP];
+        SP++;
       }
 
       print_execution(line, "STO", IR, PC, BP, SP, DP, PAS, GP);
