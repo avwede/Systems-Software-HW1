@@ -122,12 +122,14 @@ int main(int argc, char *argv[])
       // LIT
       if (BP == GP)
       {
-        PAS[++DP] = IR[2];
+        DP++;
+        PAS[DP] = IR[2];
       }
 
       else
       {
-        PAS[--SP] = IR[2];
+        SP--;
+        PAS[SP] = IR[2];
       }
 
       print_execution(line, "LIT", IR, PC, BP, SP, DP, PAS, GP);
@@ -330,17 +332,20 @@ int main(int argc, char *argv[])
       // LOD
       if (BP == GP)
       {
-        PAS[++DP] = PAS[GP + IR[2]];
+        DP++;
+        PAS[DP] = PAS[GP + IR[2]];
       }
 
       else if (base(IR[1], BP, PAS) == GP)
       {
-        PAS[--SP] = PAS[GP + IR[2]];
+        SP--;
+        PAS[SP] = PAS[GP + IR[2]];
       }
 
       else
       {
-        PAS[--SP] = PAS[base(IR[1], BP, PAS) - IR[2]];
+        SP--;
+        PAS[SP] = PAS[base(IR[1], BP, PAS) - IR[2]];
       }
 
       print_execution(line, "LOD", IR, PC, BP, SP, DP, PAS, GP);
@@ -425,12 +430,14 @@ int main(int argc, char *argv[])
         printf("Top of Stack Value: ");
         if (BP == GP)
         {
-          printf("%d\n", PAS[DP--]);
+          printf("%d\n", PAS[DP]);
+          DP--;
         }
 
         else
         {
-          printf("%d\n", PAS[SP++]);
+          printf("%d\n", PAS[SP]);
+          SP++;
         }
         break;
 
@@ -438,11 +445,13 @@ int main(int argc, char *argv[])
         printf("Please Enter an Integer: ");
         if (BP == GP)
         {
-          scanf("%d", &PAS[++DP]);
+          DP++;
+          scanf("%d", &PAS[DP]);
         }
         else
         {
-          scanf("%d", &PAS[--SP]);
+          SP--;
+          scanf("%d", &PAS[SP]);
         }
         break;
 
