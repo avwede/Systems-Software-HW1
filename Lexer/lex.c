@@ -18,6 +18,19 @@
 #define MAX_IDENT_LEN 11
 #define MAX_NUMBER_LEN 5
 
+struct lexeme {
+    int type;
+    char value[MAX_NUMBER_LEN];
+    char name[MAX_IDENT_LEN]; 
+};
+
+typedef enum {
+constsym = 1, varsym, procsym, beginsym, endsym, whilesym, dosym, ifsym, thensym, 
+elsesym, callsym, writesym, readsym, identsym, numbersym, assignsym, addsym, 
+subsym, multsym, divsym, modsym, eqlsym, neqsym, lsssym, leqsym, gtrsym, geqsym, 
+oddsym, lparensym, rparensym, commasym, periodsym, semicolonsym
+} token_type;
+
 lexeme *list;
 int lex_index;
 
