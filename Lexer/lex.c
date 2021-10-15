@@ -44,7 +44,6 @@ lexeme *lexanalyzer(char *input)
 {
 	int i, code_len, in_comment, num_len, iden_len;
 	char buffer[12];
-	lexeme new_lex;
 
 	// Initialize lexeme array
 	list = (lexeme *)calloc(MAX_NUMBER_TOKENS, sizeof(lexeme));
@@ -68,6 +67,7 @@ lexeme *lexanalyzer(char *input)
 			continue;
 		}
 		
+		// Ignore whitespace.
 		if (isspace(input[i]) || iscntrl(input[i]))
 		{
 			continue;
@@ -119,6 +119,10 @@ void parseSpecialSymbols(char ch)
 }
 
 void parseReservedWords(){
+
+}
+
+void parseNumbers(){
 
 }
 
