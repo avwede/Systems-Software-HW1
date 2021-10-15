@@ -1,3 +1,6 @@
+// Systems Software Fall 2021
+// Group 5 - Nicholas Gray, Abraham Hernandez, Prathik Ramesh, Ashley Voglewede
+
 /*
 	This is the lex.c file for the UCF Fall 2021 Systems Software Project.
 	For HW2, you must implement the function lexeme *lexanalyzer(char *input).
@@ -18,18 +21,18 @@
 #define MAX_IDENT_LEN 11
 #define MAX_NUMBER_LEN 5
 
-struct lexeme {
-    int type;
-    char value[MAX_NUMBER_LEN];
-    char name[MAX_IDENT_LEN]; 
-};
+// struct lexeme {
+//     int type;
+//     char value[MAX_NUMBER_LEN];
+//     char name[MAX_IDENT_LEN]; 
+// };
 
-typedef enum {
-constsym = 1, varsym, procsym, beginsym, endsym, whilesym, dosym, ifsym, thensym, 
-elsesym, callsym, writesym, readsym, identsym, numbersym, assignsym, addsym, 
-subsym, multsym, divsym, modsym, eqlsym, neqsym, lsssym, leqsym, gtrsym, geqsym, 
-oddsym, lparensym, rparensym, commasym, periodsym, semicolonsym
-} token_type;
+// typedef enum {
+// constsym = 1, varsym, procsym, beginsym, endsym, whilesym, dosym, ifsym, thensym, 
+// elsesym, callsym, writesym, readsym, identsym, numbersym, assignsym, addsym, 
+// subsym, multsym, divsym, modsym, eqlsym, neqsym, lsssym, leqsym, gtrsym, geqsym, 
+// oddsym, lparensym, rparensym, commasym, periodsym, semicolonsym
+// } token_type;
 
 lexeme *list;
 int lex_index;
@@ -39,13 +42,86 @@ void printtokens();
 
 lexeme *lexanalyzer(char *input)
 {
+	int i, code_len, in_comment, num_len, iden_len;
+	char buffer[12];
+	lexeme new_lex;
+
 	// Initialize lexeme array
 	list = (lexeme *)calloc(MAX_NUMBER_TOKENS, sizeof(lexeme));
+	lex_index = 0;
+	code_len = strlen(input);
 
-	// TODO: Implement Lexing
+	// TODO: Proper parsing.
+	// We need to parse from special symbols, and parse for indentifiers and numbers.
+	// Maybe make special functions for checking if a word (in buffer) is reserved or
+	// the symbol is special.
+	for (i = 0; i < code_len; i++)
+	{
+		// Ignore if in a comment, until we hit a newline.
+		if (in_comment)
+		{
+			if (input[i] == '\n')
+			{
+				in_comment = 0;
+			}
+			
+			continue;
+		}
+		
+		if (isspace(input[i]) || iscntrl(input[i]))
+		{
+			continue;
+		}
 
+		
+		if (isdigit(input[i]))
+		{
+			;
+		}
+
+		if (isalpha(input[i]))
+		{
+			;
+		}
+	}
+
+ 
+	printtokens();
 	return list;
 }
+
+int isReserved(char* token)
+{
+	return 0;
+}
+
+void parseSpecialSymbols(char ch)
+{
+	// switch(input[i])
+	// {
+	// 	case '==':
+	// 	case '!=':
+	// 	case '<':
+	// 	case '<=':
+	// 	case '>':
+	// 	case '>=':
+	// 	case '%':
+	// 	case '*':
+	// 	case '/':
+	// 	case '+':
+	// 	case '-':
+	// 	case '(':
+	// 	case ')':
+	// 	case ',':
+	// 	case '.':
+	// 	case ';':
+	// }
+}
+
+void parseReservedWords(){
+
+}
+
 
 void printtokens()
 {
