@@ -42,7 +42,7 @@ void printtokens();
 
 lexeme *lexanalyzer(char *input)
 {
-	int i, code_len, in_comment, num_len, iden_len;
+	int i, code_len, in_comment, pervious_dash, num_len, iden_len;
 	char buffer[12];
 
 	// Initialize lexeme array
@@ -65,6 +65,20 @@ lexeme *lexanalyzer(char *input)
 			}
 
 			continue;
+		}
+
+		// Dash Detected
+		if (input[i] == '/')
+		{
+			if (pervious_dash)
+			{
+				in_comment = 1;
+				pervious_dash = 0;
+			}
+			else
+			{
+				pervious_dash = 1;
+			}
 		}
 
 		// Ignore whitespace.
