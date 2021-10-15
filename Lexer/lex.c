@@ -117,6 +117,20 @@ lexeme *lexanalyzer(char *input)
 			possible_word = 0;
 		}
 
+		if (possible_number && !isdigit(input[i]))
+		{
+			buffer[buffer_index] = '\0';
+			buffer_index = 0;
+
+			lexeme current;
+			current.type = numbersym;
+			current.value = atoi(buffer);
+			list[lex_index++] = current;
+
+			buffer[0] = '\0';
+			possible_number = 0;
+		}
+
 		// Ignore whitespace.
 		if (isspace(input[i]) || iscntrl(input[i]))
 		{
@@ -132,6 +146,7 @@ lexeme *lexanalyzer(char *input)
 		if (isdigit(input[i]))
 		{
 			// parseNumber()
+			buffer[buffer_index++] = input[i];
 			possible_number = 1;
 		}
 
