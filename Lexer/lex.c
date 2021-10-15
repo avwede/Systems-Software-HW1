@@ -40,12 +40,14 @@ int lex_index;
 void printlexerror(int type);
 void printtokens();
 token_type isReserved(char *token);
+token_type parseSpecialSymbols(char *buffer);
+int isSpecialCharacter(char c);
 
 lexeme *lexanalyzer(char *input)
 {
-	int i, code_len, in_comment, pervious_dash, num_len, iden_len, possible_number, possible_word, buffer_index;
+	int i, code_len, in_comment, num_len, iden_len, possible_number, possible_word, possible_special_symbol, buffer_index;
 	char buffer[12];
-	in_comment = pervious_dash = num_len = iden_len = possible_number = possible_word = buffer_index = 0;
+	in_comment = num_len = iden_len = possible_number = possible_word = buffer_index = possible_special_symbol = 0;
 
 	// Initialize lexeme array
 	list = (lexeme *)calloc(MAX_NUMBER_TOKENS, sizeof(lexeme));
@@ -69,19 +71,26 @@ lexeme *lexanalyzer(char *input)
 			continue;
 		}
 
-		// Dash Detected
-		if (input[i] == '/')
+		// Detected Comments
+		if (input[i] == '/' && i < code_len && input[i + 1] == '/')
 		{
-			if (pervious_dash)
+			in_comment = 1;
+			continue;
+		}
+
+		if (possible_special_symbol && !isSpecialCharacter(input[i]))
+		{
+			buffer[buffer_index] = '\0';
+			buffer_index = 0;
+
+			lexeme current;
+			token_type symbol_type = parseSpecialSymbols(buffer);
+			if (symbol_type)
 			{
-				in_comment = 1;
-				pervious_dash = 0;
-				continue;
+				current.type = symbol_type;
+				list[lex_index++] = current;
 			}
-			else
-			{
-				pervious_dash = 1;
-			}
+			possible_special_symbol = 0;
 		}
 
 		// Add either reserved word or identifier lexeme to list
@@ -112,6 +121,12 @@ lexeme *lexanalyzer(char *input)
 		if (isspace(input[i]) || iscntrl(input[i]))
 		{
 			continue;
+		}
+
+		if (isSpecialCharacter(input[i]))
+		{
+			buffer[buffer_index++] = input[i];
+			possible_special_symbol = 1;
 		}
 
 		if (isdigit(input[i]))
@@ -194,29 +209,106 @@ token_type isReserved(char *token)
 	return 0;
 }
 
-void parseSpecialSymbols(char ch)
+int isSpecialCharacter(char c)
+{
+	switch (c)
+	{
+	case '=':
+	case '!':
+	case '<':
+	case '>':
+	case '%':
+	case '*':
+	case '/':
+	case '+':
+	case '-':
+	case '(':
+	case ')':
+	case ',':
+	case '.':
+	case ';':
+	case ':':
+		return 1;
+	default:
+		return 0;
+	}
+}
+
+token_type parseSpecialSymbols(char *buffer)
 {
 	// Do proper error checking for invalid symbols
-
-	// switch(input[i])
-	// {
-	// 	case '==':
-	// 	case '!=':
-	// 	case '<':
-	// 	case '<=':
-	// 	case '>':
-	// 	case '>=':
-	// 	case '%':
-	// 	case '*':
-	// 	case '/':
-	// 	case '+':
-	// 	case '-':
-	// 	case '(':
-	// 	case ')':
-	// 	case ',':
-	// 	case '.':
-	// 	case ';':
-	// }
+	if (strcmp(buffer, "==") == 0)
+	{
+		return eqlsym;
+	}
+	else if (strcmp(buffer, "!=") == 0)
+	{
+		return neqsym;
+	}
+	else if (strcmp(buffer, "<") == 0)
+	{
+		return lsssym;
+	}
+	else if (strcmp(buffer, "<=") == 0)
+	{
+		return leqsym;
+	}
+	else if (strcmp(buffer, ">") == 0)
+	{
+		return gtrsym;
+	}
+	else if (strcmp(buffer, ">=") == 0)
+	{
+		return geqsym;
+	}
+	else if (strcmp(buffer, "%") == 0)
+	{
+		return modsym;
+	}
+	else if (strcmp(buffer, "*") == 0)
+	{
+		return multsym;
+	}
+	else if (strcmp(buffer, "/") == 0)
+	{
+		return divsym;
+	}
+	else if (strcmp(buffer, "+") == 0)
+	{
+		return addsym;
+	}
+	else if (strcmp(buffer, "-") == 0)
+	{
+		return subsym;
+	}
+	else if (strcmp(buffer, "(") == 0)
+	{
+		return lparensym;
+	}
+	else if (strcmp(buffer, ")") == 0)
+	{
+		return rparensym;
+	}
+	else if (strcmp(buffer, ",") == 0)
+	{
+		return commasym;
+	}
+	else if (strcmp(buffer, ".") == 0)
+	{
+		return periodsym;
+	}
+	else if (strcmp(buffer, ";") == 0)
+	{
+		return semicolonsym;
+	}
+	else if (strcmp(buffer, ":=") == 0)
+	{
+		return assignsym;
+	}
+	else
+	{
+		return 0;
+	}
 }
 
 void parseReservedWordsOrIdentifier()
