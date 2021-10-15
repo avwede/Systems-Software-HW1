@@ -39,11 +39,13 @@ int lex_index;
 
 void printlexerror(int type);
 void printtokens();
+token_type isReserved(char *token);
 
 lexeme *lexanalyzer(char *input)
 {
-	int i, code_len, in_comment, pervious_dash, num_len, iden_len;
+	int i, code_len, in_comment, pervious_dash, num_len, iden_len, possible_number, possible_word, buffer_index;
 	char buffer[12];
+	in_comment = pervious_dash = num_len = iden_len = possible_number = possible_word = buffer_index = 0;
 
 	// Initialize lexeme array
 	list = (lexeme *)calloc(MAX_NUMBER_TOKENS, sizeof(lexeme));
@@ -74,11 +76,36 @@ lexeme *lexanalyzer(char *input)
 			{
 				in_comment = 1;
 				pervious_dash = 0;
+				continue;
 			}
 			else
 			{
 				pervious_dash = 1;
 			}
+		}
+
+		// Add either reserved word or identifier lexeme to list
+		if (possible_word && !(isalpha(input[i]) || isdigit(input[i])))
+		{
+			buffer[buffer_index] = '\0';
+			buffer_index = 0;
+
+			lexeme current;
+			token_type reservedValue = isReserved(buffer);
+			if (reservedValue)
+			{
+				current.type = reservedValue;
+				list[lex_index++] = current;
+			}
+			else
+			{
+				current.type = identsym;
+				strcpy(current.name, buffer);
+				list[lex_index++] = current;
+			}
+
+			buffer[0] = '\0';
+			possible_word = 0;
 		}
 
 		// Ignore whitespace.
@@ -90,13 +117,14 @@ lexeme *lexanalyzer(char *input)
 		if (isdigit(input[i]))
 		{
 			// parseNumber()
-			;
+			possible_number = 1;
 		}
 
 		if (isalpha(input[i]))
 		{
 			// parseReservedWordsOrIdentifier()
-			;
+			buffer[buffer_index++] = input[i];
+			possible_word = 1;
 		}
 	}
 
