@@ -76,11 +76,13 @@ lexeme *lexanalyzer(char *input)
 		
 		if (isdigit(input[i]))
 		{
+			// parseNumber()
 			;
 		}
 
 		if (isalpha(input[i]))
 		{
+			// parseReservedWordsOrIdentifier()
 			;
 		}
 	}
@@ -97,6 +99,8 @@ int isReserved(char* token)
 
 void parseSpecialSymbols(char ch)
 {
+	// Do proper error checking for invalid symbols
+
 	// switch(input[i])
 	// {
 	// 	case '==':
@@ -118,12 +122,18 @@ void parseSpecialSymbols(char ch)
 	// }
 }
 
-void parseReservedWords(){
+void parseReservedWordsOrIdentifier(){
+	// Do proper error checking for invalid length, etc
+	// Identifier: letter(letter|digit)*
+	// Check if isdigit() for identifiers, if so set token type to identsym
 
+	// Reserved Words: const, var, procedure, call, if, then, else, while, do, begin, end, read, write, odd
+	// Do a strcmp to check which reserved word it is, then set the appropriate token type
 }
 
 void parseNumbers(){
-
+	// Do proper error checking for invalid length
+	// Set to numbersym if valid
 }
 
 
