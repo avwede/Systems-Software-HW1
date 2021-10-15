@@ -41,6 +41,7 @@ void printlexerror(int type);
 void printtokens();
 token_type isReserved(char *token);
 token_type parseSpecialSymbols(char *buffer);
+void appendLexemeIfNeeded(char *input, char *buffer, int *buffer_index, int i, int *possible_special_symbol, int *possible_word, int *possible_number);
 int isSpecialCharacter(char c);
 
 lexeme *lexanalyzer(char *input)
@@ -78,58 +79,7 @@ lexeme *lexanalyzer(char *input)
 			continue;
 		}
 
-		if (possible_special_symbol && !isSpecialCharacter(input[i]))
-		{
-			buffer[buffer_index] = '\0';
-			buffer_index = 0;
-
-			lexeme current;
-			token_type symbol_type = parseSpecialSymbols(buffer);
-			if (symbol_type)
-			{
-				current.type = symbol_type;
-				list[lex_index++] = current;
-			}
-			possible_special_symbol = 0;
-		}
-
-		// Add either reserved word or identifier lexeme to list
-		if (possible_word && !(isalpha(input[i]) || isdigit(input[i])))
-		{
-			buffer[buffer_index] = '\0';
-			buffer_index = 0;
-
-			lexeme current;
-			token_type reservedValue = isReserved(buffer);
-			if (reservedValue)
-			{
-				current.type = reservedValue;
-				list[lex_index++] = current;
-			}
-			else
-			{
-				current.type = identsym;
-				strcpy(current.name, buffer);
-				list[lex_index++] = current;
-			}
-
-			buffer[0] = '\0';
-			possible_word = 0;
-		}
-
-		if (possible_number && !isdigit(input[i]))
-		{
-			buffer[buffer_index] = '\0';
-			buffer_index = 0;
-
-			lexeme current;
-			current.type = numbersym;
-			current.value = atoi(buffer);
-			list[lex_index++] = current;
-
-			buffer[0] = '\0';
-			possible_number = 0;
-		}
+		appendLexemeIfNeeded(input, buffer, &buffer_index, i, &possible_special_symbol, &possible_word, &possible_number);
 
 		// Ignore whitespace.
 		if (isspace(input[i]) || iscntrl(input[i]))
@@ -158,8 +108,66 @@ lexeme *lexanalyzer(char *input)
 		}
 	}
 
+	appendLexemeIfNeeded(input, buffer, &buffer_index, i, &possible_special_symbol, &possible_word, &possible_number);
+
 	printtokens();
 	return list;
+}
+
+void appendLexemeIfNeeded(char *input, char *buffer, int *buffer_index, int i, int *possible_special_symbol, int *possible_word, int *possible_number)
+{
+	if (*possible_special_symbol && !isSpecialCharacter(input[i]))
+	{
+		buffer[*buffer_index] = '\0';
+		*buffer_index = 0;
+
+		lexeme current;
+		token_type symbol_type = parseSpecialSymbols(buffer);
+		if (symbol_type)
+		{
+			current.type = symbol_type;
+			list[lex_index++] = current;
+		}
+		*possible_special_symbol = 0;
+	}
+
+	// Add either reserved word or identifier lexeme to list
+	if (*possible_word && !(isalpha(input[i]) || isdigit(input[i])))
+	{
+		buffer[*buffer_index] = '\0';
+		*buffer_index = 0;
+
+		lexeme current;
+		token_type reservedValue = isReserved(buffer);
+		if (reservedValue)
+		{
+			current.type = reservedValue;
+			list[lex_index++] = current;
+		}
+		else
+		{
+			current.type = identsym;
+			strcpy(current.name, buffer);
+			list[lex_index++] = current;
+		}
+
+		buffer[0] = '\0';
+		*possible_word = 0;
+	}
+
+	if (*possible_number && !isdigit(input[i]))
+	{
+		buffer[*buffer_index] = '\0';
+		*buffer_index = 0;
+
+		lexeme current;
+		current.type = numbersym;
+		current.value = atoi(buffer);
+		list[lex_index++] = current;
+
+		buffer[0] = '\0';
+		*possible_number = 0;
+	}
 }
 
 token_type isReserved(char *token)
