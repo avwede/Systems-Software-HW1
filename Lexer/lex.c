@@ -24,13 +24,13 @@
 // struct lexeme {
 //     int type;
 //     char value[MAX_NUMBER_LEN];
-//     char name[MAX_IDENT_LEN]; 
+//     char name[MAX_IDENT_LEN];
 // };
 
 // typedef enum {
-// constsym = 1, varsym, procsym, beginsym, endsym, whilesym, dosym, ifsym, thensym, 
-// elsesym, callsym, writesym, readsym, identsym, numbersym, assignsym, addsym, 
-// subsym, multsym, divsym, modsym, eqlsym, neqsym, lsssym, leqsym, gtrsym, geqsym, 
+// constsym = 1, varsym, procsym, beginsym, endsym, whilesym, dosym, ifsym, thensym,
+// elsesym, callsym, writesym, readsym, identsym, numbersym, assignsym, addsym,
+// subsym, multsym, divsym, modsym, eqlsym, neqsym, lsssym, leqsym, gtrsym, geqsym,
 // oddsym, lparensym, rparensym, commasym, periodsym, semicolonsym
 // } token_type;
 
@@ -63,17 +63,16 @@ lexeme *lexanalyzer(char *input)
 			{
 				in_comment = 0;
 			}
-			
+
 			continue;
 		}
-		
+
 		// Ignore whitespace.
 		if (isspace(input[i]) || iscntrl(input[i]))
 		{
 			continue;
 		}
 
-		
 		if (isdigit(input[i]))
 		{
 			// parseNumber()
@@ -87,13 +86,69 @@ lexeme *lexanalyzer(char *input)
 		}
 	}
 
- 
 	printtokens();
 	return list;
 }
 
-int isReserved(char* token)
+token_type isReserved(char *token)
 {
+	if (strcmp(token, "const") == 0)
+	{
+		return constsym;
+	}
+	else if (strcmp(token, "var") == 0)
+	{
+		return varsym;
+	}
+	else if (strcmp(token, "procedure") == 0)
+	{
+		return procsym;
+	}
+	else if (strcmp(token, "call") == 0)
+	{
+		return callsym;
+	}
+	else if (strcmp(token, "if") == 0)
+	{
+		return ifsym;
+	}
+	else if (strcmp(token, "then") == 0)
+	{
+		return thensym;
+	}
+	else if (strcmp(token, "else") == 0)
+	{
+		return elsesym;
+	}
+	else if (strcmp(token, "while") == 0)
+	{
+		return whilesym;
+	}
+	else if (strcmp(token, "do") == 0)
+	{
+		return dosym;
+	}
+	else if (strcmp(token, "begin") == 0)
+	{
+		return beginsym;
+	}
+	else if (strcmp(token, "end") == 0)
+	{
+		return endsym;
+	}
+	else if (strcmp(token, "read") == 0)
+	{
+		return readsym;
+	}
+	else if (strcmp(token, "write") == 0)
+	{
+		return writesym;
+	}
+	else if (strcmp(token, "odd") == 0)
+	{
+		return oddsym;
+	}
+
 	return 0;
 }
 
@@ -122,7 +177,8 @@ void parseSpecialSymbols(char ch)
 	// }
 }
 
-void parseReservedWordsOrIdentifier(){
+void parseReservedWordsOrIdentifier()
+{
 	// Do proper error checking for invalid length, etc
 	// Identifier: letter(letter|digit)*
 	// Check if isdigit() for identifiers, if so set token type to identsym
@@ -131,11 +187,11 @@ void parseReservedWordsOrIdentifier(){
 	// Do a strcmp to check which reserved word it is, then set the appropriate token type
 }
 
-void parseNumbers(){
+void parseNumbers()
+{
 	// Do proper error checking for invalid length
 	// Set to numbersym if valid
 }
-
 
 void printtokens()
 {
