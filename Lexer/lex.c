@@ -90,6 +90,11 @@ lexeme *lexanalyzer(char *input)
 				current.type = symbol_type;
 				list[lex_index++] = current;
 			}
+			else
+			{
+				printlexerror(1);
+				return NULL;
+			}
 
 			buffer[0] = '\0';
 			possible_special_symbol = 0;
@@ -117,10 +122,17 @@ lexeme *lexanalyzer(char *input)
 
 			buffer[0] = '\0';
 			possible_word = 0;
+			iden_len = 0;
 		}
 
 		if (possible_number && !isdigit(input[i]))
 		{
+			if (isalpha(input[i]))
+			{
+				printlexerror(2);
+				return NULL;
+			}
+
 			buffer[buffer_index] = '\0';
 			buffer_index = 0;
 
@@ -131,6 +143,7 @@ lexeme *lexanalyzer(char *input)
 
 			buffer[0] = '\0';
 			possible_number = 0;
+			num_len = 0;
 		}
 
 		// Ignore whitespace.
@@ -160,18 +173,46 @@ lexeme *lexanalyzer(char *input)
 		if (isdigit(input[i]))
 		{
 			buffer[buffer_index++] = input[i];
-			if (!possible_word)
+			if (!possible_word && !possible_special_symbol)
 			{
 				possible_number = 1;
+			}
+			else if (possible_word)
+			{
+				iden_len++;
+			}
+
+			if (possible_number)
+			{
+				num_len++;
+			}
+
+			if (num_len > MAX_NUMBER_LEN)
+			{
+				printlexerror(3);
+				return NULL;
+			}
+
+			if (iden_len > MAX_IDENT_LEN)
+			{
+				printlexerror(4);
+				return NULL;
 			}
 		}
 
 		if (isalpha(input[i]))
 		{
-			if (!possible_number)
+			if (!possible_number && !possible_special_symbol)
 			{
 				possible_word = 1;
 				buffer[buffer_index++] = input[i];
+				iden_len++;
+
+				if (iden_len > MAX_IDENT_LEN)
+				{
+					printlexerror(4);
+					return NULL;
+				}
 			}
 		}
 	}
