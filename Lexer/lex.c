@@ -159,16 +159,20 @@ lexeme *lexanalyzer(char *input)
 
 		if (isdigit(input[i]))
 		{
-			// parseNumber()
 			buffer[buffer_index++] = input[i];
-			possible_number = 1;
+			if (!possible_word)
+			{
+				possible_number = 1;
+			}
 		}
 
 		if (isalpha(input[i]))
 		{
-			// parseReservedWordsOrIdentifier()
-			buffer[buffer_index++] = input[i];
-			possible_word = 1;
+			if (!possible_number)
+			{
+				possible_word = 1;
+				buffer[buffer_index++] = input[i];
+			}
 		}
 	}
 
