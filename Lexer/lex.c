@@ -58,7 +58,7 @@ lexeme *lexanalyzer(char *input)
 	// We need to parse from special symbols, and parse for indentifiers and numbers.
 	// Maybe make special functions for checking if a word (in buffer) is reserved or
 	// the symbol is special.
-	for (i = 0; i < code_len; i++)
+	for (i = 0; i <= code_len; i++)
 	{
 		// Ignore if in a comment, until we hit a newline.
 		if (in_comment)
@@ -85,11 +85,13 @@ lexeme *lexanalyzer(char *input)
 
 			lexeme current;
 			token_type symbol_type = parseSpecialSymbols(buffer);
-			if (symbol_type)
+			if (symbol_type && (symbol_type == gtrsym || symbol_type == lsssym))
 			{
 				current.type = symbol_type;
 				list[lex_index++] = current;
 			}
+
+			buffer[0] = '\0';
 			possible_special_symbol = 0;
 		}
 
@@ -140,7 +142,19 @@ lexeme *lexanalyzer(char *input)
 		if (isSpecialCharacter(input[i]))
 		{
 			buffer[buffer_index++] = input[i];
+			buffer[buffer_index] = '\0';
 			possible_special_symbol = 1;
+
+			token_type symbol_type = parseSpecialSymbols(buffer);
+			if (symbol_type && symbol_type != gtrsym && symbol_type != lsssym)
+			{
+				lexeme current;
+				current.type = symbol_type;
+				list[lex_index++] = current;
+				buffer_index = 0;
+				buffer[0] = '\0';
+				possible_special_symbol = 0;
+			}
 		}
 
 		if (isdigit(input[i]))
@@ -324,22 +338,6 @@ token_type parseSpecialSymbols(char *buffer)
 	{
 		return 0;
 	}
-}
-
-void parseReservedWordsOrIdentifier()
-{
-	// Do proper error checking for invalid length, etc
-	// Identifier: letter(letter|digit)*
-	// Check if isdigit() for identifiers, if so set token type to identsym
-
-	// Reserved Words: const, var, procedure, call, if, then, else, while, do, begin, end, read, write, odd
-	// Do a strcmp to check which reserved word it is, then set the appropriate token type
-}
-
-void parseNumbers()
-{
-	// Do proper error checking for invalid length
-	// Set to numbersym if valid
 }
 
 void printtokens()
