@@ -21,19 +21,6 @@
 #define MAX_IDENT_LEN 11
 #define MAX_NUMBER_LEN 5
 
-// struct lexeme {
-//     int type;
-//     char value[MAX_NUMBER_LEN];
-//     char name[MAX_IDENT_LEN];
-// };
-
-// typedef enum {
-// constsym = 1, varsym, procsym, beginsym, endsym, whilesym, dosym, ifsym, thensym,
-// elsesym, callsym, writesym, readsym, identsym, numbersym, assignsym, addsym,
-// subsym, multsym, divsym, modsym, eqlsym, neqsym, lsssym, leqsym, gtrsym, geqsym,
-// oddsym, lparensym, rparensym, commasym, periodsym, semicolonsym
-// } token_type;
-
 lexeme *list;
 int lex_index;
 
@@ -54,10 +41,7 @@ lexeme *lexanalyzer(char *input)
 	lex_index = 0;
 	code_len = strlen(input);
 
-	// TODO: Proper parsing.
-	// We need to parse from special symbols, and parse for indentifiers and numbers.
-	// Maybe make special functions for checking if a word (in buffer) is reserved or
-	// the symbol is special.
+	// Main lexing logic. 
 	for (i = 0; i <= code_len; i++)
 	{
 		// Ignore if in a comment, until we hit a newline.
@@ -78,6 +62,8 @@ lexeme *lexanalyzer(char *input)
 			continue;
 		}
 
+		// Check for > and < symbols. This block is executed once we
+		// know the possible special symbol cannot be >= or <=.
 		if (possible_special_symbol && !isSpecialCharacter(input[i]))
 		{
 			buffer[buffer_index] = '\0';
@@ -125,8 +111,10 @@ lexeme *lexanalyzer(char *input)
 			iden_len = 0;
 		}
 
+		// Add possible number to lexeme list.
 		if (possible_number && !isdigit(input[i]))
 		{
+			// If a token began with a number, it cannot contain a letter.
 			if (isalpha(input[i]))
 			{
 				printlexerror(2);
@@ -159,6 +147,10 @@ lexeme *lexanalyzer(char *input)
 			possible_special_symbol = 1;
 
 			token_type symbol_type = parseSpecialSymbols(buffer);
+
+			// Tokens starting with a > or < symbol could lead to the >= and <=
+			// symbols, so we move on to check the next character in these 2 cases.
+			// Else, add the special symbol to the lexeme list.
 			if (symbol_type && symbol_type != gtrsym && symbol_type != lsssym)
 			{
 				lexeme current;
@@ -170,6 +162,8 @@ lexeme *lexanalyzer(char *input)
 			}
 		}
 
+		// Mark the start of a possible number, if needed. 
+		// Increment the possible number's length or the possible identifier's length.
 		if (isdigit(input[i]))
 		{
 			buffer[buffer_index++] = input[i];
@@ -200,6 +194,8 @@ lexeme *lexanalyzer(char *input)
 			}
 		}
 
+		// Mark that the current lexeme is possibly an identiifer
+		// and increment its length. 
 		if (isalpha(input[i]))
 		{
 			if (!possible_number && !possible_special_symbol)
@@ -221,6 +217,8 @@ lexeme *lexanalyzer(char *input)
 	return list;
 }
 
+// Return 0 for invalid symbols.
+// For valid symbols, return the correct token value.
 token_type isReserved(char *token)
 {
 	if (strcmp(token, "const") == 0)
@@ -283,6 +281,7 @@ token_type isReserved(char *token)
 	return 0;
 }
 
+// Identify special characters, to be lexed separately.
 int isSpecialCharacter(char c)
 {
 	switch (c)
@@ -308,9 +307,10 @@ int isSpecialCharacter(char c)
 	}
 }
 
+// Return 0 for invalid symbols.
+// For valid symbols, return the correct token value.
 token_type parseSpecialSymbols(char *buffer)
 {
-	// Do proper error checking for invalid symbols
 	if (strcmp(buffer, "==") == 0)
 	{
 		return eqlsym;
