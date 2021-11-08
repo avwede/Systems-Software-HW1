@@ -10,6 +10,7 @@ instruction *code;
 int cIndex;
 symbol *table;
 int tIndex;
+int currLevel = 0;
 
 void emit(int opname, int level, int mvalue);
 void addToSymbolTable(int k, char n[], int v, int l, int a, int m);
@@ -17,13 +18,25 @@ void printparseerror(int err_code);
 void printsymboltable();
 void printassemblycode();
 
+int multipleDeclarationCheck(lexeme l)
+{
+	int i;
+	
+	for (i = 0; i < tIndex; i++)
+	{
+		if (strcmp(table[i].name, l.name) == 0 && table[i].mark == 0 && table[i].level == currLevel)
+			return i;
+	}
+
+	return -1;
+}
+
 instruction *parse(lexeme *list, int printTable, int printCode)
 {
 	code = NULL;
 	code[cIndex].opcode = -1;
 	return code;
 }
-
 
 void emit(int opname, int level, int mvalue)
 {
