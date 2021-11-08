@@ -18,10 +18,26 @@ void printparseerror(int err_code);
 void printsymboltable();
 void printassemblycode();
 
+void mark()
+{
+	int i;
+	for (i = tIndex; i >= 0; i--)
+	{
+		if (table[i].mark == 0) 
+		{
+			if (table[i].level == currLevel)
+				table[i].mark = 1;
+
+			else if (table[i].level < currLevel)
+				return;
+		}
+	}
+}
+
 int multipleDeclarationCheck(lexeme l)
 {
 	int i;
-	
+
 	for (i = 0; i < tIndex; i++)
 	{
 		if (strcmp(table[i].name, l.name) == 0 && table[i].mark == 0 && table[i].level == currLevel)
