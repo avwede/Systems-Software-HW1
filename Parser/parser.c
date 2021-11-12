@@ -17,7 +17,7 @@ int earlyHalt = 0;
 void program(lexeme *list);
 void procedureDeclaration(lexeme *list);
 void factor(lexeme *list);
-void var_declaration(lexeme *list);
+void varDeclaration(lexeme *list);
 void expression(lexeme *list);
 void emit(int opname, int level, int mvalue);
 void addToSymbolTable(int k, char n[], int v, int l, int a, int m);
