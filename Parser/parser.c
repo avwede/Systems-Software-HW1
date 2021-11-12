@@ -11,12 +11,79 @@ int cIndex;
 symbol *table;
 int tIndex;
 int currLevel = 0;
+int earlyHalt = 0;
+int level;
 
+void program(lexeme *list);
 void emit(int opname, int level, int mvalue);
 void addToSymbolTable(int k, char n[], int v, int l, int a, int m);
 void printparseerror(int err_code);
 void printsymboltable();
 void printassemblycode();
+
+instruction *parse(lexeme *list, int printTable, int printCode)
+{
+	code = NULL;
+
+	program(list);
+	
+	if (earlyHalt)
+	{
+		return NULL;
+	}
+
+	code[cIndex].opcode = -1;
+	if (printTable)
+	{
+		printsymboltable();
+	}
+
+	if (printCode)
+	{
+		printassemblycode();
+	}
+
+	return code;
+}
+
+void program(lexeme *list)
+{
+	int codeLen;
+	cIndex = 0;
+
+	// emit JMP, the jump address is fixed later.
+	emit(7, 0, 0);
+	addToSymbolTable(3, "main", 0, 0, 0, 0);
+
+	level = -1;
+
+	// BLOCK FUNCTION
+
+	// Check if the code ends with a period.
+	if (list[len(list) - 1].type != periodsym)
+	{
+		printparseerror(1);
+		earlyHalt = 1;
+		return NULL;
+	}
+
+	// emit HALT
+	emit(9, 0, 3);
+
+	// Go through each line of code.
+	codeLen = len(code);
+	for (cIndex = 0; cIndex < codeLen; cIndex++)
+	{
+		// Line has OPR 5 (CALL)
+		if (code[cIndex].opcode == 5)
+		{
+			code[cIndex].m = table[code[cIndex].m].addr;
+		}
+	}
+
+	// Fix JMP address.
+	code[0].m = table[0].addr;
+}
 
 void mark()
 {
@@ -45,13 +112,6 @@ int multipleDeclarationCheck(lexeme l)
 	}
 
 	return -1;
-}
-
-instruction *parse(lexeme *list, int printTable, int printCode)
-{
-	code = NULL;
-	code[cIndex].opcode = -1;
-	return code;
 }
 
 void emit(int opname, int level, int mvalue)
