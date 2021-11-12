@@ -10,11 +10,13 @@ instruction *code;
 int cIndex;
 symbol *table;
 int tIndex;
+int lIndex;
 int currLevel = 0;
 int earlyHalt = 0;
-int level;
 
 void program(lexeme *list);
+void procedureDeclaration(lexeme *list);
+void factor(lexeme *list);
 void emit(int opname, int level, int mvalue);
 void addToSymbolTable(int k, char n[], int v, int l, int a, int m);
 void printparseerror(int err_code);
@@ -55,12 +57,17 @@ void program(lexeme *list)
 	emit(7, 0, 0);
 	addToSymbolTable(3, "main", 0, 0, 0, 0);
 
-	level = -1;
+	currLevel = -1;
 
 	// BLOCK FUNCTION
 
+	if (earlyHalt)
+	{
+		return NULL;
+	}
+
 	// Check if the code ends with a period.
-	if (list[len(list) - 1].type != periodsym)
+	if (list[lIndex].type != periodsym)
 	{
 		printparseerror(1);
 		earlyHalt = 1;
@@ -85,6 +92,58 @@ void program(lexeme *list)
 	code[0].m = table[0].addr;
 }
 
+void procedureDeclaration(lexeme* list)
+{
+	int symidx;
+
+	while (list[lIndex].type == procsym)
+	{
+		lIndex += 1;
+
+		if (list[lIndex].type != identsym)
+		{
+			// Not following grammar: ident ';'
+			printparseerror(4);
+			earlyHalt = 1;
+			return NULL;
+		}
+
+		symidx = multipleDeclarationCheck(list[lIndex]);
+
+		if (symidx != -1)
+		{
+			// Declaration already found in symbol tree.
+			printparseerror(18);
+		}
+
+		lIndex += 1;
+
+		if (list[lIndex].type != semicolonsym)
+		{
+			// Not following grammar: ident ';'
+			printparseerror(4);
+			earlyHalt = 1;
+			return NULL;
+		}
+
+		lIndex += 1;
+
+		// BLOCK FUNCTION
+
+		if (list[lIndex].type != semicolonsym)
+		{
+			// Symbol declarations should close with a semicolon.S
+			printparseerror(14);
+			earlyHalt = 1;
+			return NULL;
+		}
+
+		lIndex += 1;
+
+		// emit RTN
+		emit(2, 0, 0);
+	}
+}
 void mark()
 {
 	int i;
