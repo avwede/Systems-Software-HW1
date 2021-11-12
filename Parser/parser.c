@@ -173,6 +173,100 @@ int multipleDeclarationCheck(lexeme l)
 	return -1;
 }
 
+void var_declaration()
+{
+	int numVars = 0;
+	if (token == varsym)
+		do
+			numVars++;
+			// FIGURE OUT HOW - global list and pull from there?
+			 GET NEXT TOKEN
+			if (token != identsym)
+			{
+				printparseerror(3);
+				return NULL;
+			}
+			symidx = MULTIPLEDECLARATIONCHECK(token)
+			if (symidx != -1)
+			{
+				printparseerror(18);
+				return NULL;
+			}
+			if (level == 0)
+			{
+				// straightforward as expected
+				ADD TO SYMBOL TABLE (kind 2, ident, 0, level, numVars-1, unmarked)
+			}
+			else
+			{
+				ADD TO SYMBOL TABLE (kind 2, ident, 0, level, numVars+2, unmarked)
+			}
+			 GET NEXT TOKEN
+		while (token == commasym)
+		if (token != semicolonsym)
+			if (token == identsym)
+				printparseerror(13);
+			else
+				printparseerror(14);
+		GET NEXT TOKEN
+	return numVars;
+}
+
+void expression() 
+{
+	int val;
+
+	if (token == subsym)
+	{
+		get next token
+		val = term();
+		emit NEG
+		while (token == addsym || token == subsym)
+			if (token == addsym)
+				get next token
+				val = term();
+				emit ADD
+			else
+				get next token
+				val = term();
+				emit SUB
+	}
+
+	else
+	{
+		if (token == addsym)
+			get next token
+		val = term();
+		while (token == addsym || token == subsym)
+		{
+			if token == addsym
+			{
+				get next token
+				TERM
+				emit ADD
+			}
+			else
+			{
+				get next token
+				TERM
+				emit SUB
+			}
+		}
+	}
+
+	/*
+	if token == ( identifier number odd
+		error
+	*/
+}
+
+instruction *parse(lexeme *list, int printTable, int printCode)
+{
+	code = NULL;
+	code[cIndex].opcode = -1;
+	return code;
+}
+
 void emit(int opname, int level, int mvalue)
 {
 	code[cIndex].opcode = opname;
