@@ -17,6 +17,7 @@ int earlyHalt = 0;
 void program(lexeme *list);
 void block(lexeme *list);
 void procedureDeclaration(lexeme *list);
+void term(lexeme *list);
 void factor(lexeme *list);
 void varDeclaration(lexeme *list);
 void statement(lexeme *list);
@@ -56,6 +57,7 @@ void program(lexeme *list)
 {
 	int codeLen;
 	cIndex = 0;
+	lIndex = 0;
 
 	// emit JMP, the jump address is fixed later.
 	emit(7, 0, 0);
@@ -314,6 +316,33 @@ void expression(lexeme *list)
 		printparseerror(17);
 		earlyHalt = 1;
 		return NULL;
+	}
+}
+
+void term(lexeme *list)
+{
+	lexeme token = list[lIndex];
+
+	factor(list);
+
+	while (token.type == multsym || token.type == divsym || token.type == modsym)
+	{
+		lIndex++;
+		token = list[lIndex];
+		factor(list);
+
+		if (token.type == multsym)
+		{
+			emit(2, currLevel, 4);
+		}
+		else if (token.type == divsym)
+		{
+			emit(2, currLevel, 5);
+		}
+		else
+		{
+			emit(2, currLevel, 7);
+		}
 	}
 }
 
