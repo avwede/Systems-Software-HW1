@@ -17,6 +17,8 @@ int earlyHalt = 0;
 void program(lexeme *list);
 void procedureDeclaration(lexeme *list);
 void factor(lexeme *list);
+void var_declaration(lexeme *list);
+void expression(lexeme *list);
 void emit(int opname, int level, int mvalue);
 void addToSymbolTable(int k, char n[], int v, int l, int a, int m);
 void printparseerror(int err_code);
@@ -173,98 +175,118 @@ int multipleDeclarationCheck(lexeme l)
 	return -1;
 }
 
-void var_declaration()
+void varDeclaration(lexeme *list)
 {
 	int numVars = 0;
-	if (token == varsym)
+	if (list[lIndex].type == varsym)
 		do
+		{
 			numVars++;
-			// FIGURE OUT HOW - global list and pull from there?
-			 GET NEXT TOKEN
-			if (token != identsym)
+			lIndex++;
+
+			if (list[lIndex].type != identsym)
 			{
 				printparseerror(3);
+				earlyHalt = 1;
 				return NULL;
 			}
-			symidx = MULTIPLEDECLARATIONCHECK(token)
+
+			symidx = multipleDeclarationCheck(token)
+
 			if (symidx != -1)
 			{
 				printparseerror(18);
+				earlyHalt = 1;
 				return NULL;
 			}
+
 			if (level == 0)
 			{
-				// straightforward as expected
-				ADD TO SYMBOL TABLE (kind 2, ident, 0, level, numVars-1, unmarked)
+				addToSymbolTable(2, list[lIndex].name, 0, currLevel, numVars-1, 0)
 			}
 			else
 			{
-				ADD TO SYMBOL TABLE (kind 2, ident, 0, level, numVars+2, unmarked)
+				addToSymbolTable(2, list[lIndex].name, 0, currLevel, numVars+2, 0)
 			}
-			 GET NEXT TOKEN
-		while (token == commasym)
-		if (token != semicolonsym)
-			if (token == identsym)
+			lIndex++;
+		}
+		while (list[lIndex].type == commasym)
+		
+		if (list[lIndex].type != semicolonsym)
+		{
+			if (list[lIndex].type == identsym)
+			{
 				printparseerror(13);
+				earlyHalt = 1;
+				return NULL;
+			}
 			else
+			{
 				printparseerror(14);
-		GET NEXT TOKEN
+				earlyHalt = 1;
+				return NULL;
+			}
+		}
+		
+		lIndex++;
+
 	return numVars;
 }
 
-void expression() 
+void expression(lexeme *list) 
 {
-	int val;
-
-	if (token == subsym)
+	if (list[lIndex].type == subsym)
 	{
-		get next token
-		val = term();
-		emit NEG
-		while (token == addsym || token == subsym)
-			if (token == addsym)
-				get next token
-				val = term();
-				emit ADD
-			else
-				get next token
-				val = term();
-				emit SUB
-	}
-
-	else
-	{
-		if (token == addsym)
-			get next token
-		val = term();
-		while (token == addsym || token == subsym)
+		lIndex++;
+		//term();
+		emit(2, currLevel, 1); // Emit NEG
+		while (list[lIndex].type == addsym || list[lIndex].type == subsym)
 		{
-			if token == addsym
+			if (list[lIndex].type == addsym)
 			{
-				get next token
-				TERM
-				emit ADD
+				lIndex++;
+				//term(list);
+				emit(2, currLevel, 2); // Emit ADD
 			}
 			else
 			{
-				get next token
-				TERM
-				emit SUB
+				lIndex++;
+				//term(list);
+				emit(2, currLevel, 3); // Emit SUB
 			}
 		}
 	}
 
-	/*
-	if token == ( identifier number odd
-		error
-	*/
-}
+	else
+	{
+		if (list[lIndex].type == addsym)
+			lIndex++;
+		//term(list);
+		while (list[lIndex].type == addsym || list[lIndex].type == subsym)
+		{
+			if (list[lIndex].type == addsym)
+			{
+				lIndex++;
+				//term(list);
+				emit(2, currLevel, 2); // Emit ADD
+			}
+			else
+			{
+				lIndex++;
+				//term(list);
+				emit(2, currLevel, 3) // Emit SUB
+			}
+		}
+	}
 
-instruction *parse(lexeme *list, int printTable, int printCode)
-{
-	code = NULL;
-	code[cIndex].opcode = -1;
-	return code;
+	
+	if (list[lIndex].type == lparensym || list[lIndex].type == identsym || 
+		list[lIndex].type == numbersym || list[lIndex].type == oddsym)
+	{
+		printparseerror(17);
+		earlyHalt = 1;
+		return NULL;
+	}
 }
 
 void emit(int opname, int level, int mvalue)
