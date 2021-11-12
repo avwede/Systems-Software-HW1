@@ -210,7 +210,7 @@ void varDeclaration(lexeme *list)
 			}
 			lIndex++;
 		}
-		while (list[lIndex].type == commasym)
+		while (list[lIndex].type == commasym);
 		
 		if (list[lIndex].type != semicolonsym)
 		{
@@ -274,7 +274,7 @@ void expression(lexeme *list)
 			{
 				lIndex++;
 				//term(list);
-				emit(2, currLevel, 3) // Emit SUB
+				emit(2, currLevel, 3); // Emit SUB
 			}
 		}
 	}
