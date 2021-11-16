@@ -23,11 +23,13 @@ void factor(lexeme *list);
 void varDeclaration(lexeme *list);
 void statement(lexeme *list);
 void expression(lexeme *list);
+int findSymbol(lexeme symbol, int x);
 void emit(int opname, int level, int mvalue);
 void addToSymbolTable(int k, char n[], int v, int l, int a, int m);
 void printparseerror(int err_code);
 void printsymboltable();
 void printassemblycode();
+
 
 instruction *parse(lexeme *list, int printTable, int printCode)
 {
@@ -597,6 +599,26 @@ void term(lexeme *list)
 			emit(2, currLevel, 7);
 		}
 	}
+}
+
+// Finds the correct symbol name with a linear search. 
+int findSymbol(lexeme symbol, int kind)
+{
+	int i;
+
+	for (i = tIndex - 1; i >= 0; i--)
+	{
+		// Check if the entry has the correct name. 
+		if (strcmp(symbol.name, table[i].name) == 0)
+		{
+			// Check if the entry has the correct kind value and is unmarked.
+			if (kind == table[i].kind && table[i].mark == 0)
+			{
+				return 1;
+			}
+		}
+	}
+	return -1;
 }
 
 void emit(int opname, int level, int mvalue)
