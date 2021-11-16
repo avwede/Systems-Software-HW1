@@ -269,20 +269,20 @@ void expression(lexeme *list)
 	if (list[lIndex].type == subsym)
 	{
 		lIndex++;
-		//term();
+		term(list);
 		emit(2, currLevel, 1); // Emit NEG
 		while (list[lIndex].type == addsym || list[lIndex].type == subsym)
 		{
 			if (list[lIndex].type == addsym)
 			{
 				lIndex++;
-				//term(list);
+				term(list);
 				emit(2, currLevel, 2); // Emit ADD
 			}
 			else
 			{
 				lIndex++;
-				//term(list);
+				term(list);
 				emit(2, currLevel, 3); // Emit SUB
 			}
 		}
@@ -292,19 +292,19 @@ void expression(lexeme *list)
 	{
 		if (list[lIndex].type == addsym)
 			lIndex++;
-		//term(list);
+		term(list);
 		while (list[lIndex].type == addsym || list[lIndex].type == subsym)
 		{
 			if (list[lIndex].type == addsym)
 			{
 				lIndex++;
-				//term(list);
+				term(list);
 				emit(2, currLevel, 2); // Emit ADD
 			}
 			else
 			{
 				lIndex++;
-				//term(list);
+				term(list);
 				emit(2, currLevel, 3); // Emit SUB
 			}
 		}
