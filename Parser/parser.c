@@ -23,6 +23,7 @@ void factor(lexeme *list);
 void varDeclaration(lexeme *list);
 void statement(lexeme *list);
 void expression(lexeme *list);
+void condition(lexeme *list);
 int findSymbol(lexeme symbol, int x);
 void emit(int opname, int level, int mvalue);
 void addToSymbolTable(int k, char n[], int v, int l, int a, int m);
@@ -571,6 +572,59 @@ void expression(lexeme *list)
 		printparseerror(17);
 		earlyHalt = 1;
 		return NULL;
+	}
+}
+
+void condition(lexeme *list)
+{
+	if (list[lIndex].type == oddsym)
+	{
+		lIndex++;
+		expression(list);
+		emit(2, currLevel, 6); // Emit ODD
+	}
+	else
+	{
+		if (list[lIndex].type == eqlsym)
+		{
+			lIndex++;
+			expression(list);
+			emit(2, currLevel, 8); // Emit EQL
+		}
+		else if (list[lIndex].type == neqsym)
+		{
+			lIndex++;
+			expression(list);
+			emit(2, currLevel, 9); // Emit NEQ
+		}
+		else if (list[lIndex].type == lsssym)
+		{
+			lIndex++;
+			expression(list);
+			emit(2, currLevel, 10); // Emit LSS
+		}
+		else if (list[lIndex].type == leqsym)
+		{
+			lIndex++;
+			expression(list);
+			emit(2, currLevel, 11); // Emit LEQ
+		}
+		else if (list[lIndex].type == gtrsym)
+		{
+			lIndex++;
+			expression(list);
+			emit(2, currLevel, 12); // Emit GTR
+		}
+		else if (list[lIndex].type == geqsym)
+		{
+			lIndex++;
+			expression(list);
+			emit(2, currLevel, 13); // Emit GEQ
+		}
+		else
+		{
+			printparseerror(10);
+		}
 	}
 }
 
