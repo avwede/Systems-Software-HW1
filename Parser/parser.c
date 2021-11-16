@@ -123,7 +123,191 @@ void block(lexeme *list)
 
 void statement(lexeme *list)
 {
-	// STATEMENT
+	lexeme token = list[lIndex];
+
+	if (token.type == identsym)
+	{
+		int symIdx = findSymbol(token, 2);
+
+		if (symIdx == -1)
+		{
+			if (findSymbol(token, 1) != findSymbol(token, 3))
+			{
+				// error
+			}
+			else
+			{
+				// err
+			}
+		}
+
+		lIndex++;
+		token = list[lIndex];
+
+		if (token.type != assignsym)
+		{
+			// error
+		}
+
+		lIndex++;
+		token = list[lIndex];
+
+		expression(list);
+
+		emit(4, currLevel - table[symIdx].level, table[symIdx].addr);
+
+		return;
+	}
+
+	if (token.type == beginsym)
+	{
+		do
+		{
+			lIndex++;
+			token = list[lIndex];
+			statement(list);
+		} while (token.type == semicolonsym);
+
+		if (token.type != endsym)
+		{
+			if (token.type == identsym || token.type == beginsym || token.type == ifsym || token.type == whilesym || token.type == readsym || token.type == writesym || token.type == callsym)
+			{
+				// error
+			}
+			else
+			{
+				// error
+			}
+		}
+
+		lIndex++;
+		token = list[lIndex];
+		return;
+	}
+
+	if (token.type == ifsym)
+	{
+		lIndex++;
+		token = list[lIndex];
+		condition(list);
+
+		int jpcIdx = cIndex;
+		emit(8, 0, 0);
+
+		if (token.type != thensym)
+		{
+			// error
+		}
+
+		lIndex++;
+		token = list[lIndex];
+
+		statement(list);
+
+		if (token.type == elsesym)
+		{
+			int jmpIdx = cIndex;
+			emit(7, 0, 0);
+			code[jpcIdx].m = cIndex * 3;
+			statement(list);
+			code[jmpIdx].m = cIndex * 3;
+		}
+		else
+		{
+			code[jpcIdx].m = cIndex * 3;
+		}
+
+		return;
+	}
+
+	if (token.type == whilesym)
+	{
+		lIndex++;
+		token = list[lIndex];
+
+		int loopIdx = cIndex;
+		condition(list);
+
+		if (token.type != dosym)
+		{
+			// error
+		}
+
+		lIndex++;
+		token = list[lIndex];
+
+		int jpcIdx = cIndex;
+		emit(8, 0, 0);
+		statement(list);
+		emit(7, 0, loopIdx * 3);
+		code[jpcIdx].m = cIndex * 3;
+
+		return;
+	}
+	if (token.type == readsym)
+	{
+		lIndex++;
+		token = list[lIndex];
+
+		if (token.type != identsym)
+		{
+			// error
+		}
+
+		int symIdx = findSymbol(token, 2);
+
+		if (symIdx == -1)
+		{
+			if (findSymbol(token, 1) != findSymbol(token, 3))
+			{
+				// error
+			}
+			else
+			{
+				// error
+			}
+		}
+
+		lIndex++;
+		token = list[lIndex];
+		emit(9, 0, 2);
+		emit(4, currLevel - table[symIdx].level, table[symIdx].addr);
+
+		return;
+	}
+	if (token.type == writesym)
+	{
+		lIndex++;
+		token = list[lIndex];
+		expression(list);
+		emit(9, 0, 1);
+
+		return;
+	}
+	if (token.type == callsym)
+	{
+		lIndex++;
+		token = list[lIndex];
+		int symIdx = findSymbol(token, 3);
+
+		if (symIdx == -1)
+		{
+			if (findSymbol(token, 1) != findSymbol(token, 2))
+			{
+				// error
+			}
+			else
+			{
+				// error
+			}
+		}
+
+		lIndex++;
+		token = list[lIndex];
+		emit(5, currLevel - table[symIdx].level, symIdx);
+
+		return;
+	}
 }
 
 void procedureDeclaration(lexeme *list)
@@ -178,6 +362,7 @@ void procedureDeclaration(lexeme *list)
 		emit(2, 0, 0);
 	}
 }
+
 void mark()
 {
 	int i;
