@@ -166,7 +166,7 @@ void constDeclaration(lexeme *list)
 				earlyHalt = 1;
 			}
 			
-			addToSymbolTable(1, savedName, 0, currLevel, 0, 0);
+			addToSymbolTable(1, savedName, list[lIndex].value, currLevel, 0, 0);
 
 			lIndex++;
 		} while (list[lIndex].type == commasym);
