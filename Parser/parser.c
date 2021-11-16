@@ -16,6 +16,7 @@ int earlyHalt = 0;
 
 void program(lexeme *list);
 void block(lexeme *list);
+void constDeclaration(lexeme *list);
 void procedureDeclaration(lexeme *list);
 void term(lexeme *list);
 void factor(lexeme *list);
@@ -103,7 +104,7 @@ void block(lexeme *list)
 {
 	currLevel++;
 	int procedure_idx = tIndex - 1;
-	const_declaration();
+	constDeclaration();
 	int x = var_declaration();
 	procedure_declaration();
 	table[procedure_idx].addr = cIndex * 3;
@@ -119,6 +120,73 @@ void block(lexeme *list)
 	statement(list);
 	mark();
 	currLevel--;
+}
+
+// Constant declarations should follow the pattern 'ident := number {, ident := number}
+void constDeclaration(lexeme *list)
+{
+	int symidx = 0;
+
+	if (list[lIndex].type == constsym)
+	{
+		do
+		{
+			lIndex++;
+			if (list[lIndex].type != identsym)
+			{
+				// Const must have an identifier after it. 
+				printparseerror(2);
+				earlyHalt = 1;
+			}
+
+			symidx = multipleDeclarationCheck(list[lIndex]);
+			if (symidx != -1)
+			{
+				// Declaration already found in symbol tree.
+				printparseerror(18);
+				earlyHalt = 1;
+			}
+
+			char savedName[MAX_SYMBOL_COUNT];
+			strcpy(savedName, list[lIndex].name);
+
+			lIndex++;
+			if (list[lIndex].type != assignsym)
+			{
+				// Identifier must have := after it.
+				printparseerror(2);
+				earlyHalt = 1;
+			}
+
+			lIndex++;
+			if (list[lIndex].type != numbersym)
+			{
+				// := must have a number after it.
+				printparseerror(2);
+				earlyHalt = 1;
+			}
+			
+			addToSymbolTable(1, savedName, 0, currLevel, 0, 0);
+
+			lIndex++;
+		} while (list[lIndex].type == commasym);
+		
+		if (list[lIndex].type != semicolonsym)
+		{
+			if (list[lIndex].type == identsym)
+			{
+				printparseerror(13);
+				earlyHalt = 1;
+			}
+			else 
+			{
+				printparseerror(14);
+				earlyHalt = 1;
+			}
+		}
+
+		lIndex++;
+	}
 }
 
 void statement(lexeme *list)
@@ -166,7 +234,7 @@ void procedureDeclaration(lexeme *list)
 
 		if (list[lIndex].type != semicolonsym)
 		{
-			// Symbol declarations should close with a semicolon.S
+			// Symbol declarations should close with a semicolon.
 			printparseerror(14);
 			earlyHalt = 1;
 			return NULL;
@@ -178,6 +246,7 @@ void procedureDeclaration(lexeme *list)
 		emit(2, 0, 0);
 	}
 }
+
 void mark()
 {
 	int i;
