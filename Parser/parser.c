@@ -20,7 +20,9 @@ void constDeclaration(lexeme *list);
 void procedureDeclaration(lexeme *list);
 void term(lexeme *list);
 void factor(lexeme *list);
-void varDeclaration(lexeme *list);
+void mark();
+int varDeclaration(lexeme *list);
+int multipleDeclarationCheck(lexeme token);
 void statement(lexeme *list);
 void expression(lexeme *list);
 void condition(lexeme *list);
@@ -30,7 +32,6 @@ void addToSymbolTable(int k, char n[], int v, int l, int a, int m);
 void printparseerror(int err_code);
 void printsymboltable();
 void printassemblycode();
-
 
 instruction *parse(lexeme *list, int printTable, int printCode)
 {
@@ -74,7 +75,7 @@ void program(lexeme *list)
 
 	if (earlyHalt)
 	{
-		return NULL;
+		return;
 	}
 
 	// Check if the code ends with a period.
@@ -82,20 +83,19 @@ void program(lexeme *list)
 	{
 		printparseerror(1);
 		earlyHalt = 1;
-		return NULL;
+		return;
 	}
 
 	// emit HALT
 	emit(9, 0, 3);
 
 	// Go through each line of code.
-	codeLen = len(code);
-	for (cIndex = 0; cIndex < codeLen; cIndex++)
+	for (int i = 0; i < cIndex; i++)
 	{
 		// Line has OPR 5 (CALL)
-		if (code[cIndex].opcode == 5)
+		if (code[i].opcode == 5)
 		{
-			code[cIndex].m = table[code[cIndex].m].addr;
+			code[i].m = table[code[i].m].addr;
 		}
 	}
 
@@ -107,9 +107,9 @@ void block(lexeme *list)
 {
 	currLevel++;
 	int procedure_idx = tIndex - 1;
-	constDeclaration();
-	int x = var_declaration();
-	procedure_declaration();
+	constDeclaration(list);
+	int x = varDeclaration(list);
+	procedureDeclaration(list);
 	table[procedure_idx].addr = cIndex * 3;
 
 	if (currLevel == 0)
@@ -137,7 +137,7 @@ void constDeclaration(lexeme *list)
 			lIndex++;
 			if (list[lIndex].type != identsym)
 			{
-				// Const must have an identifier after it. 
+				// Const must have an identifier after it.
 				printparseerror(2);
 				earlyHalt = 1;
 			}
@@ -168,12 +168,12 @@ void constDeclaration(lexeme *list)
 				printparseerror(2);
 				earlyHalt = 1;
 			}
-			
+
 			addToSymbolTable(1, savedName, list[lIndex].value, currLevel, 0, 0);
 
 			lIndex++;
 		} while (list[lIndex].type == commasym);
-		
+
 		if (list[lIndex].type != semicolonsym)
 		{
 			if (list[lIndex].type == identsym)
@@ -181,7 +181,7 @@ void constDeclaration(lexeme *list)
 				printparseerror(13);
 				earlyHalt = 1;
 			}
-			else 
+			else
 			{
 				printparseerror(14);
 				earlyHalt = 1;
@@ -394,7 +394,7 @@ void procedureDeclaration(lexeme *list)
 			// Not following grammar: ident ';'
 			printparseerror(4);
 			earlyHalt = 1;
-			return NULL;
+			return;
 		}
 
 		symidx = multipleDeclarationCheck(list[lIndex]);
@@ -412,7 +412,7 @@ void procedureDeclaration(lexeme *list)
 			// Not following grammar: ident ';'
 			printparseerror(4);
 			earlyHalt = 1;
-			return NULL;
+			return;
 		}
 
 		lIndex += 1;
@@ -424,7 +424,7 @@ void procedureDeclaration(lexeme *list)
 			// Symbol declarations should close with a semicolon.
 			printparseerror(14);
 			earlyHalt = 1;
-			return NULL;
+			return;
 		}
 
 		lIndex += 1;
@@ -463,7 +463,7 @@ int multipleDeclarationCheck(lexeme l)
 	return -1;
 }
 
-void varDeclaration(lexeme *list)
+int varDeclaration(lexeme *list)
 {
 	int numVars = 0;
 	if (list[lIndex].type == varsym)
@@ -476,16 +476,16 @@ void varDeclaration(lexeme *list)
 			{
 				printparseerror(3);
 				earlyHalt = 1;
-				return NULL;
+				return -1;
 			}
 
-			int symidx = multipleDeclarationCheck(token);
+			int symidx = multipleDeclarationCheck(list[lIndex]);
 
 			if (symidx != -1)
 			{
 				printparseerror(18);
 				earlyHalt = 1;
-				return NULL;
+				return -1;
 			}
 
 			if (currLevel == 0)
@@ -505,13 +505,13 @@ void varDeclaration(lexeme *list)
 		{
 			printparseerror(13);
 			earlyHalt = 1;
-			return NULL;
+			return -1;
 		}
 		else
 		{
 			printparseerror(14);
 			earlyHalt = 1;
-			return NULL;
+			return -1;
 		}
 	}
 
@@ -571,7 +571,7 @@ void expression(lexeme *list)
 	{
 		printparseerror(17);
 		earlyHalt = 1;
-		return NULL;
+		return;
 	}
 }
 
@@ -655,14 +655,19 @@ void term(lexeme *list)
 	}
 }
 
-// Finds the correct symbol name with a linear search. 
+void factor(lexeme *list)
+{
+	// Implement Factor
+}
+
+// Finds the correct symbol name with a linear search.
 int findSymbol(lexeme symbol, int kind)
 {
 	int i;
 
 	for (i = tIndex - 1; i >= 0; i--)
 	{
-		// Check if the entry has the correct name. 
+		// Check if the entry has the correct name.
 		if (strcmp(symbol.name, table[i].name) == 0)
 		{
 			// Check if the entry has the correct kind value and is unmarked.
