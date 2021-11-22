@@ -434,6 +434,9 @@ void procedureDeclaration(lexeme *list)
 	}
 }
 
+// Function to mark all symbol table entries equal to the current level,
+// starting at the end of the table. Stops after finding an unmarked entry
+// with a level less than the current level.
 void mark()
 {
 	int i;
@@ -450,6 +453,9 @@ void mark()
 	}
 }
 
+// Looks for unmarked symbols already in the symbol table that
+// match the name specified in the given lexeme and are on the
+// current lexical level. 
 int multipleDeclarationCheck(lexeme l)
 {
 	int i;
@@ -472,6 +478,7 @@ void varDeclaration(lexeme *list)
 			numVars++;
 			lIndex++;
 
+			// variable declarations must start with an identifier.
 			if (list[lIndex].type != identsym)
 			{
 				printparseerror(3);
@@ -481,6 +488,7 @@ void varDeclaration(lexeme *list)
 
 			int symidx = multipleDeclarationCheck(token);
 
+			// An unmarked symbol of this name has already been declared on the same lexical level.
 			if (symidx != -1)
 			{
 				printparseerror(18);
@@ -501,12 +509,14 @@ void varDeclaration(lexeme *list)
 
 	if (list[lIndex].type != semicolonsym)
 	{
+		// Multiple declarations must be separated by commas
 		if (list[lIndex].type == identsym)
 		{
 			printparseerror(13);
 			earlyHalt = 1;
 			return NULL;
 		}
+		// Symbol declarations must close with a semicolon.
 		else
 		{
 			printparseerror(14);
@@ -566,6 +576,7 @@ void expression(lexeme *list)
 		}
 	}
 
+	// Invalid arithmetic
 	if (list[lIndex].type == lparensym || list[lIndex].type == identsym ||
 			list[lIndex].type == numbersym || list[lIndex].type == oddsym)
 	{
