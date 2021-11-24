@@ -45,6 +45,7 @@ instruction *parse(lexeme *list, int printTable, int printCode)
 	}
 
 	code[cIndex].opcode = -1;
+
 	if (printTable)
 	{
 		printsymboltable();
@@ -60,7 +61,7 @@ instruction *parse(lexeme *list, int printTable, int printCode)
 
 void program(lexeme *list)
 {
-	int codeLen;
+	int codeLen, i;
 	cIndex = 0;
 	lIndex = 0;
 
@@ -70,7 +71,6 @@ void program(lexeme *list)
 
 	currLevel = -1;
 
-	// BLOCK FUNCTION
 	block(list);
 
 	if (earlyHalt)
@@ -90,7 +90,7 @@ void program(lexeme *list)
 	emit(9, 0, 3);
 
 	// Go through each line of code.
-	for (int i = 0; i < cIndex; i++)
+	for (i = 0; i < cIndex; i++)
 	{
 		// Line has OPR 5 (CALL)
 		if (code[i].opcode == 5)
@@ -108,8 +108,26 @@ void block(lexeme *list)
 	currLevel++;
 	int procedure_idx = tIndex - 1;
 	constDeclaration(list);
+
+	if (earlyHalt)
+	{
+		return;
+	}
+
 	int x = varDeclaration(list);
+
+	if (earlyHalt)
+	{
+		return;
+	}
+
 	procedureDeclaration(list);
+
+	if (earlyHalt)
+	{
+		return;
+	}
+
 	table[procedure_idx].addr = cIndex * 3;
 
 	if (currLevel == 0)
@@ -120,7 +138,14 @@ void block(lexeme *list)
 	{
 		emit(6, currLevel, x + 3);
 	}
+
 	statement(list);
+
+	if (earlyHalt)
+	{
+		return;
+	}
+
 	mark();
 	currLevel--;
 }
@@ -140,6 +165,7 @@ void constDeclaration(lexeme *list)
 				// Const must have an identifier after it.
 				printparseerror(2);
 				earlyHalt = 1;
+				return;
 			}
 
 			symidx = multipleDeclarationCheck(list[lIndex]);
@@ -148,6 +174,7 @@ void constDeclaration(lexeme *list)
 				// Declaration already found in symbol tree.
 				printparseerror(18);
 				earlyHalt = 1;
+				return;
 			}
 
 			char savedName[MAX_SYMBOL_COUNT];
@@ -159,6 +186,7 @@ void constDeclaration(lexeme *list)
 				// Identifier must have := after it.
 				printparseerror(2);
 				earlyHalt = 1;
+				return;
 			}
 
 			lIndex++;
@@ -167,6 +195,7 @@ void constDeclaration(lexeme *list)
 				// := must have a number after it.
 				printparseerror(2);
 				earlyHalt = 1;
+				return;
 			}
 
 			addToSymbolTable(1, savedName, list[lIndex].value, currLevel, 0, 0);
@@ -180,11 +209,13 @@ void constDeclaration(lexeme *list)
 			{
 				printparseerror(13);
 				earlyHalt = 1;
+				return;
 			}
 			else
 			{
 				printparseerror(14);
 				earlyHalt = 1;
+				return;
 			}
 		}
 
@@ -192,193 +223,63 @@ void constDeclaration(lexeme *list)
 	}
 }
 
-void statement(lexeme *list)
+int varDeclaration(lexeme *list)
 {
-	lexeme token = list[lIndex];
-
-	if (token.type == identsym)
-	{
-		int symIdx = findSymbol(token, 2);
-
-		if (symIdx == -1)
-		{
-			if (findSymbol(token, 1) != findSymbol(token, 3))
-			{
-				// error
-			}
-			else
-			{
-				// err
-			}
-		}
-
-		lIndex++;
-		token = list[lIndex];
-
-		if (token.type != assignsym)
-		{
-			// error
-		}
-
-		lIndex++;
-		token = list[lIndex];
-
-		expression(list);
-
-		emit(4, currLevel - table[symIdx].level, table[symIdx].addr);
-
-		return;
-	}
-
-	if (token.type == beginsym)
-	{
+	int numVars = 0;
+	if (list[lIndex].type == varsym)
 		do
 		{
+			numVars++;
 			lIndex++;
-			token = list[lIndex];
-			statement(list);
-		} while (token.type == semicolonsym);
 
-		if (token.type != endsym)
-		{
-			if (token.type == identsym || token.type == beginsym || token.type == ifsym || token.type == whilesym || token.type == readsym || token.type == writesym || token.type == callsym)
+			if (list[lIndex].type != identsym)
 			{
-				// error
+				printparseerror(3);
+				earlyHalt = 1;
+				return -1;
+			}
+
+			int symidx = multipleDeclarationCheck(list[lIndex]);
+
+			if (symidx != -1)
+			{
+				printparseerror(18);
+				earlyHalt = 1;
+				return -1;
+			}
+
+			if (currLevel == 0)
+			{
+				addToSymbolTable(2, list[lIndex].name, 0, currLevel, numVars - 1, 0);
 			}
 			else
 			{
-				// error
+				addToSymbolTable(2, list[lIndex].name, 0, currLevel, numVars + 2, 0);
 			}
-		}
 
-		lIndex++;
-		token = list[lIndex];
-		return;
-	}
+			lIndex++;
 
-	if (token.type == ifsym)
+		} while (list[lIndex].type == commasym);
+
+	if (list[lIndex].type != semicolonsym)
 	{
-		lIndex++;
-		token = list[lIndex];
-		condition(list);
-
-		int jpcIdx = cIndex;
-		emit(8, 0, 0);
-
-		if (token.type != thensym)
+		if (list[lIndex].type == identsym)
 		{
-			// error
-		}
-
-		lIndex++;
-		token = list[lIndex];
-
-		statement(list);
-
-		if (token.type == elsesym)
-		{
-			int jmpIdx = cIndex;
-			emit(7, 0, 0);
-			code[jpcIdx].m = cIndex * 3;
-			statement(list);
-			code[jmpIdx].m = cIndex * 3;
+			printparseerror(13);
+			earlyHalt = 1;
+			return -1;
 		}
 		else
 		{
-			code[jpcIdx].m = cIndex * 3;
+			printparseerror(14);
+			earlyHalt = 1;
+			return -1;
 		}
-
-		return;
 	}
 
-	if (token.type == whilesym)
-	{
-		lIndex++;
-		token = list[lIndex];
+	lIndex++;
 
-		int loopIdx = cIndex;
-		condition(list);
-
-		if (token.type != dosym)
-		{
-			// error
-		}
-
-		lIndex++;
-		token = list[lIndex];
-
-		int jpcIdx = cIndex;
-		emit(8, 0, 0);
-		statement(list);
-		emit(7, 0, loopIdx * 3);
-		code[jpcIdx].m = cIndex * 3;
-
-		return;
-	}
-	if (token.type == readsym)
-	{
-		lIndex++;
-		token = list[lIndex];
-
-		if (token.type != identsym)
-		{
-			// error
-		}
-
-		int symIdx = findSymbol(token, 2);
-
-		if (symIdx == -1)
-		{
-			if (findSymbol(token, 1) != findSymbol(token, 3))
-			{
-				// error
-			}
-			else
-			{
-				// error
-			}
-		}
-
-		lIndex++;
-		token = list[lIndex];
-		emit(9, 0, 2);
-		emit(4, currLevel - table[symIdx].level, table[symIdx].addr);
-
-		return;
-	}
-	if (token.type == writesym)
-	{
-		lIndex++;
-		token = list[lIndex];
-		expression(list);
-		emit(9, 0, 1);
-
-		return;
-	}
-	if (token.type == callsym)
-	{
-		lIndex++;
-		token = list[lIndex];
-		int symIdx = findSymbol(token, 3);
-
-		if (symIdx == -1)
-		{
-			if (findSymbol(token, 1) != findSymbol(token, 2))
-			{
-				// error
-			}
-			else
-			{
-				// error
-			}
-		}
-
-		lIndex++;
-		token = list[lIndex];
-		emit(5, currLevel - table[symIdx].level, symIdx);
-
-		return;
-	}
+	return numVars;
 }
 
 void procedureDeclaration(lexeme *list)
@@ -417,7 +318,7 @@ void procedureDeclaration(lexeme *list)
 
 		lIndex += 1;
 
-		// BLOCK FUNCTION
+		block(list);
 
 		if (list[lIndex].type != semicolonsym)
 		{
@@ -434,9 +335,273 @@ void procedureDeclaration(lexeme *list)
 	}
 }
 
-// Function to mark all symbol table entries equal to the current level,
-// starting at the end of the table. Stops after finding an unmarked entry
-// with a level less than the current level.
+void statement(lexeme *list)
+{
+	lexeme token = list[lIndex];
+
+	if (token.type == identsym)
+	{
+		int symIdx = findSymbol(token, 2);
+
+		if (symIdx == -1)
+		{
+			if (findSymbol(token, 1) != findSymbol(token, 3))
+			{
+				// Identifier is not a variable?
+				printparseerror(6);
+				earlyHalt = 1;
+				return;
+			}
+			else
+			{
+				// Undeclared identifier?
+				printparseerror(19);
+				earlyHalt = 1;
+				return;
+			}
+		}
+
+		lIndex++;
+		token = list[lIndex];
+
+		if (token.type != assignsym)
+		{
+			// Ident must be followed by :=
+			printparseerror(7);
+			earlyHalt = 1;
+			return;
+		}
+
+		lIndex++;
+		token = list[lIndex];
+
+		expression(list);
+
+		if (earlyHalt)
+		{
+			return;
+		}
+
+		emit(4, currLevel - table[symIdx].level, table[symIdx].addr);
+
+		return;
+	}
+
+	if (token.type == beginsym)
+	{
+		do
+		{
+			lIndex++;
+			token = list[lIndex];
+			statement(list);
+
+			if (earlyHalt)
+			{
+				return;
+			}
+
+		} while (token.type == semicolonsym);
+
+		if (token.type != endsym)
+		{
+			if (token.type == identsym || token.type == beginsym || token.type == ifsym || token.type == whilesym || token.type == readsym || token.type == writesym || token.type == callsym)
+			{
+				// End symbol expected, following above found instead.
+				printparseerror(15);
+				earlyHalt = 1;
+				return;
+			}
+
+			else
+			{
+				// End symbol expected, following above not found.
+				printparseerror(16);
+				earlyHalt = 1;
+				return;
+			}
+		}
+
+		lIndex++;
+		token = list[lIndex];
+		return;
+	}
+
+	if (token.type == ifsym)
+	{
+		lIndex++;
+		token = list[lIndex];
+		condition(list);
+
+		if (earlyHalt)
+		{
+			return;
+		}
+
+		int jpcIdx = cIndex;
+		emit(8, 0, 0);
+
+		if (token.type != thensym)
+		{
+			// If must be followed by then
+			printparseerror(8);
+			earlyHalt = 1;
+			return;
+		}
+
+		lIndex++;
+		token = list[lIndex];
+
+		statement(list);
+
+		if (earlyHalt)
+		{
+			return;
+		}
+
+		if (token.type == elsesym)
+		{
+			int jmpIdx = cIndex;
+			emit(7, 0, 0);
+			code[jpcIdx].m = cIndex * 3;
+			statement(list);
+
+			if (earlyHalt)
+			{
+				return;
+			}
+
+			code[jmpIdx].m = cIndex * 3;
+		}
+		else
+		{
+			code[jpcIdx].m = cIndex * 3;
+		}
+
+		return;
+	}
+
+	if (token.type == whilesym)
+	{
+		lIndex++;
+		token = list[lIndex];
+
+		int loopIdx = cIndex;
+		condition(list);
+
+		if (token.type != dosym)
+		{
+			// While must be followed by do
+			printparseerror(9);
+			earlyHalt = 1;
+			return;
+		}
+
+		lIndex++;
+		token = list[lIndex];
+
+		int jpcIdx = cIndex;
+		emit(8, 0, 0);
+		statement(list);
+
+		if (earlyHalt)
+		{
+			return;
+		}
+
+		emit(7, 0, loopIdx * 3);
+		code[jpcIdx].m = cIndex * 3;
+
+		return;
+	}
+	if (token.type == readsym)
+	{
+		lIndex++;
+		token = list[lIndex];
+
+		if (token.type != identsym)
+		{
+			// Identifier is missing
+			printparseerror(6);
+			earlyHalt = 1;
+			return;
+		}
+
+		int symIdx = findSymbol(token, 2);
+
+		if (symIdx == -1)
+		{
+			if (findSymbol(token, 1) != findSymbol(token, 3))
+			{
+				// Identifier present is not a variable?
+				printparseerror(6);
+				earlyHalt = 1;
+				return;
+			}
+			else
+			{
+				// Undeclared identifier?
+				printparseerror(19);
+				earlyHalt = 1;
+				return;
+			}
+		}
+
+		lIndex++;
+		token = list[lIndex];
+		emit(9, 0, 2);
+		emit(4, currLevel - table[symIdx].level, table[symIdx].addr);
+
+		return;
+	}
+	if (token.type == writesym)
+	{
+		lIndex++;
+		token = list[lIndex];
+		expression(list);
+
+		if (earlyHalt)
+		{
+			return;
+		}
+
+		emit(9, 0, 1);
+
+		return;
+	}
+	if (token.type == callsym)
+	{
+		lIndex++;
+		token = list[lIndex];
+		int symIdx = findSymbol(token, 3);
+
+		if (symIdx == -1)
+		{
+			if (findSymbol(token, 1) != findSymbol(token, 2))
+			{
+				// Not a procedure?
+				printparseerror(7);
+				earlyHalt = 1;
+				return;
+			}
+			else
+			{
+				// Undeclared identifier?
+				printparseerror(19);
+				earlyHalt = 1;
+				return;
+			}
+		}
+
+		lIndex++;
+		token = list[lIndex];
+		emit(5, currLevel - table[symIdx].level, symIdx);
+
+		return;
+	}
+}
+
+
+
 void mark()
 {
 	int i;
@@ -453,9 +618,6 @@ void mark()
 	}
 }
 
-// Looks for unmarked symbols already in the symbol table that
-// match the name specified in the given lexeme and are on the
-// current lexical level. 
 int multipleDeclarationCheck(lexeme l)
 {
 	int i;
@@ -469,66 +631,7 @@ int multipleDeclarationCheck(lexeme l)
 	return -1;
 }
 
-int varDeclaration(lexeme *list)
-{
-	int numVars = 0;
-	if (list[lIndex].type == varsym)
-		do
-		{
-			numVars++;
-			lIndex++;
 
-			// variable declarations must start with an identifier.
-			if (list[lIndex].type != identsym)
-			{
-				printparseerror(3);
-				earlyHalt = 1;
-				return -1;
-			}
-
-			int symidx = multipleDeclarationCheck(list[lIndex]);
-
-			// An unmarked symbol of this name has already been declared on the same lexical level.
-			if (symidx != -1)
-			{
-				printparseerror(18);
-				earlyHalt = 1;
-				return -1;
-			}
-
-			if (currLevel == 0)
-			{
-				addToSymbolTable(2, list[lIndex].name, 0, currLevel, numVars - 1, 0);
-			}
-			else
-			{
-				addToSymbolTable(2, list[lIndex].name, 0, currLevel, numVars + 2, 0);
-			}
-			lIndex++;
-		} while (list[lIndex].type == commasym);
-
-	if (list[lIndex].type != semicolonsym)
-	{
-		// Multiple declarations must be separated by commas
-		if (list[lIndex].type == identsym)
-		{
-			printparseerror(13);
-			earlyHalt = 1;
-			return -1;
-		}
-		// Symbol declarations must close with a semicolon.
-		else
-		{
-			printparseerror(14);
-			earlyHalt = 1;
-			return -1;
-		}
-	}
-
-	lIndex++;
-
-	return numVars;
-}
 
 void expression(lexeme *list)
 {
@@ -536,6 +639,12 @@ void expression(lexeme *list)
 	{
 		lIndex++;
 		term(list);
+
+		if (earlyHalt)
+		{
+			return;
+		}
+
 		emit(2, currLevel, 1); // Emit NEG
 		while (list[lIndex].type == addsym || list[lIndex].type == subsym)
 		{
@@ -543,12 +652,24 @@ void expression(lexeme *list)
 			{
 				lIndex++;
 				term(list);
+
+				if (earlyHalt)
+				{
+					return;
+				}
+
 				emit(2, currLevel, 2); // Emit ADD
 			}
 			else
 			{
 				lIndex++;
 				term(list);
+
+				if (earlyHalt)
+				{
+					return;
+				}
+
 				emit(2, currLevel, 3); // Emit SUB
 			}
 		}
@@ -558,25 +679,43 @@ void expression(lexeme *list)
 	{
 		if (list[lIndex].type == addsym)
 			lIndex++;
+
 		term(list);
+
+		if (earlyHalt)
+		{
+			return;
+		}
+
 		while (list[lIndex].type == addsym || list[lIndex].type == subsym)
 		{
 			if (list[lIndex].type == addsym)
 			{
 				lIndex++;
 				term(list);
+
+				if (earlyHalt)
+				{
+					return;
+				}
+
 				emit(2, currLevel, 2); // Emit ADD
 			}
 			else
 			{
 				lIndex++;
 				term(list);
+
+				if (earlyHalt)
+				{
+					return;
+				}
+
 				emit(2, currLevel, 3); // Emit SUB
 			}
 		}
 	}
 
-	// Invalid arithmetic
 	if (list[lIndex].type == lparensym || list[lIndex].type == identsym ||
 			list[lIndex].type == numbersym || list[lIndex].type == oddsym)
 	{
@@ -592,6 +731,12 @@ void condition(lexeme *list)
 	{
 		lIndex++;
 		expression(list);
+
+		if (earlyHalt)
+		{
+			return;
+		}
+
 		emit(2, currLevel, 6); // Emit ODD
 	}
 	else
@@ -600,41 +745,80 @@ void condition(lexeme *list)
 		{
 			lIndex++;
 			expression(list);
+
+			if (earlyHalt)
+			{
+				return;
+			}
+
 			emit(2, currLevel, 8); // Emit EQL
 		}
 		else if (list[lIndex].type == neqsym)
 		{
 			lIndex++;
 			expression(list);
+
+			if (earlyHalt)
+			{
+				return;
+			}
+
 			emit(2, currLevel, 9); // Emit NEQ
 		}
 		else if (list[lIndex].type == lsssym)
 		{
 			lIndex++;
 			expression(list);
+
+			if (earlyHalt)
+			{
+				return;
+			}
+
 			emit(2, currLevel, 10); // Emit LSS
 		}
 		else if (list[lIndex].type == leqsym)
 		{
 			lIndex++;
 			expression(list);
+
+			if (earlyHalt)
+			{
+				return;
+			}
+
 			emit(2, currLevel, 11); // Emit LEQ
 		}
 		else if (list[lIndex].type == gtrsym)
 		{
 			lIndex++;
 			expression(list);
+
+			if (earlyHalt)
+			{
+				return;
+			}
+
 			emit(2, currLevel, 12); // Emit GTR
 		}
 		else if (list[lIndex].type == geqsym)
 		{
 			lIndex++;
 			expression(list);
+
+			if (earlyHalt)
+			{
+				return;
+			}
+
 			emit(2, currLevel, 13); // Emit GEQ
 		}
 		else
 		{
+			// Relational operator missing from condition
 			printparseerror(10);
+			earlyHalt = 1;
+			return;
 		}
 	}
 }
@@ -645,11 +829,21 @@ void term(lexeme *list)
 
 	factor(list);
 
+	if (earlyHalt)
+	{
+		return;
+	}
+
 	while (token.type == multsym || token.type == divsym || token.type == modsym)
 	{
 		lIndex++;
 		token = list[lIndex];
 		factor(list);
+
+		if (earlyHalt)
+		{
+			return;
+		}
 
 		if (token.type == multsym)
 		{
@@ -668,7 +862,93 @@ void term(lexeme *list)
 
 void factor(lexeme *list)
 {
-	// Implement Factor
+	int symIdx_var, symIdx_const;
+	int L, M;
+
+	if (list[lIndex].type == identsym)
+	{
+		symIdx_var = findSymbol(list[lIndex], 2);
+		symIdx_const = findSymbol(list[lIndex], 1);
+
+		if (symIdx_var == -1 && symIdx_const == -1)
+		{
+			if (findSymbol(list[lIndex], 3) == -1)
+			{
+				// Identifier not found unmarked, undeclared identifier.
+				printparseerror(19);
+				earlyHalt = 1;
+				return;
+			}
+
+			else
+			{
+				// Identifier is a procedure
+				printparseerror(11);
+				earlyHalt = 1;
+				return;
+			}
+		}
+
+		if (symIdx_var == -1) // const
+		{
+			// emit LIT
+			M = table[symIdx_const].val;
+			emit(1, 0, M);
+		}
+
+		else if (symIdx_const == -1 || table[symIdx_var].level > table[symIdx_const].level)
+		{
+			// emit LOD
+			L = currLevel - table[symIdx_var].level;
+			M = table[symIdx_var].addr;
+			emit(3, L, M);
+		}
+
+		else
+		{
+			// emit LIT
+			M = table[symIdx_const].val;
+			emit(1, 0, M);
+		}
+
+		lIndex += 1;
+	}
+
+	else if (list[lIndex].type == numbersym)
+	{
+		// emit LIT (What is M? Is it the number?)
+		emit(1, 0, list[lIndex].value);
+		lIndex += 1;
+	}
+
+	else if (list[tIndex].type == lparensym)
+	{
+		lIndex += 1;
+		expression(list);
+
+		if (earlyHalt)
+		{
+			return;
+		}
+
+		if (list[tIndex].type != rparensym)
+		{
+			// '(' must be followed by ')'
+			printparseerror(12);
+			earlyHalt = 1;
+			return;
+		}
+
+		lIndex += 1;
+	}
+
+	else
+	{
+		// Symbol is neither a number, identifier, nor a ( smybol
+		printparseerror(11);
+		earlyHalt = 1;
+		return;
+	}
 }
 
 // Finds the correct symbol name with a linear search.
