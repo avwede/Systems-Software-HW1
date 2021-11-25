@@ -35,7 +35,8 @@ void printassemblycode();
 
 instruction *parse(lexeme *list, int printTable, int printCode)
 {
-	code = NULL;
+	code = malloc(MAX_CODE_LENGTH * sizeof(instruction));
+	table = malloc(MAX_SYMBOL_COUNT * sizeof(symbol));
 
 	program(list);
 
@@ -600,8 +601,6 @@ void statement(lexeme *list)
 	}
 }
 
-
-
 void mark()
 {
 	int i;
@@ -630,8 +629,6 @@ int multipleDeclarationCheck(lexeme l)
 
 	return -1;
 }
-
-
 
 void expression(lexeme *list)
 {
@@ -717,7 +714,7 @@ void expression(lexeme *list)
 	}
 
 	if (list[lIndex].type == lparensym || list[lIndex].type == identsym ||
-			list[lIndex].type == numbersym || list[lIndex].type == oddsym)
+		list[lIndex].type == numbersym || list[lIndex].type == oddsym)
 	{
 		printparseerror(17);
 		earlyHalt = 1;
