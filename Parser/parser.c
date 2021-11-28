@@ -499,7 +499,7 @@ void statement(lexeme *list)
 		}
 
 		int jpcIdx = cIndex;
-		emit(8, 0, code[jpcIdx].m);
+		emit(8, 0, 0);
 
 		if (list[lIndex].type != thensym)
 		{
@@ -524,7 +524,7 @@ void statement(lexeme *list)
 		if (list[lIndex].type == elsesym)
 		{
 			int jmpIdx = cIndex;
-			emit(7, 0, code[jpcIdx].m);
+			emit(7, 0, 0);
 			code[jpcIdx].m = cIndex * 3;
 			statement(list);
 
