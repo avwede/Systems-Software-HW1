@@ -1,0 +1,82 @@
+Emitting opcode 7, level 0, mvalue 0
+Adding to symbol table kind = 3, n = main, v = 0, l = 0, a = 0, m = 0
+Read symbol x
+Read symbol 14
+Adding to symbol table kind = 2, n = x, v = 0, l = 0, a = 0, m = 0
+Read symbol 
+Read symbol 33
+Read symbol 
+Read symbol 3
+Read symbol alpha
+Read symbol 14
+Adding to symbol table kind = 3, n = alpha, v = 0, l = 0, a = 0, m = 0
+Read symbol 
+Read symbol 33
+Read symbol 
+Read symbol 33
+In block setting table index 2 to 3
+Emitting opcode 6, level 0, mvalue 3
+Read symbol 
+Read symbol 4
+Emitting opcode 2, level 0, mvalue 0
+In block setting table index 0 to 9
+Emitting opcode 6, level 0, mvalue 1
+Read symbol x
+Read symbol 14
+Read symbol 
+Read symbol 16
+Read symbol 
+Read symbol 15
+Emitting opcode 1, level 0, mvalue 14
+Read symbol 
+Read symbol 19
+Read symbol 
+Read symbol 15
+Emitting opcode 1, level 0, mvalue 3
+Read symbol 
+Read symbol 17
+Emitting opcode 2, level 0, mvalue 4
+Read symbol 
+Read symbol 29
+Read symbol 
+Read symbol 15
+Emitting opcode 1, level 0, mvalue 51
+Read symbol 
+Read symbol 21
+Read symbol 
+Read symbol 15
+Emitting opcode 1, level 0, mvalue 7
+Read symbol 
+Read symbol 30
+Emitting opcode 2, level 0, mvalue 7
+Read symbol 
+Read symbol 33
+Emitting opcode 2, level 0, mvalue 2
+Emitting opcode 4, level 0, mvalue 0
+Read symbol 
+Read symbol 33
+Read symbol 
+Read symbol 5
+Read symbol 
+Read symbol 32
+Emitting opcode 9, level 0, mvalue 3
+Symbol Table:
+Kind | Name        | Value | Level | Address | Mark
+---------------------------------------------------
+   3 |        main |     0 |     0 |     9 |     1
+   2 |           x |     0 |     0 |     0 |     1
+   3 |       alpha |     0 |     0 |     3 |     1
+Line	OP Code	OP Name	L	M
+0	7	JMP	0	9
+1	6	INC	0	3
+2	2	RTN	0	0
+3	6	INC	0	1
+4	1	LIT	0	14
+5	1	LIT	0	3
+6	2	MUL	0	4
+7	1	LIT	0	51
+8	1	LIT	0	7
+9	2	MOD	0	7
+10	2	ADD	0	2
+11	4	STO	0	0
+12	9	HAL	0	3

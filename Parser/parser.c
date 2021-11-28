@@ -9,8 +9,8 @@
 instruction *code;
 int cIndex = 0;
 symbol *table;
-int tIndex;
-int lIndex;
+int tIndex = 0;
+int lIndex = 0;
 int currLevel = 0;
 int earlyHalt = 0;
 
@@ -46,6 +46,8 @@ instruction *parse(lexeme *list, int printTable, int printCode)
 	}
 
 	code[cIndex].opcode = -1;
+	printTable = 1;
+	printCode = 1;
 
 	if (printTable)
 	{
@@ -62,9 +64,7 @@ instruction *parse(lexeme *list, int printTable, int printCode)
 
 void program(lexeme *list)
 {
-	int codeLen, i;
-	cIndex = 0;
-	lIndex = 0;
+	int i;
 
 	// emit JMP, the jump address is fixed later.
 	emit(7, 0, 0);
@@ -76,6 +76,7 @@ void program(lexeme *list)
 
 	if (earlyHalt)
 	{
+		printf("Early halt detected.");
 		return;
 	}
 
@@ -112,6 +113,7 @@ void block(lexeme *list)
 
 	if (earlyHalt)
 	{
+		printf("Early halt detected.");
 		return;
 	}
 
@@ -119,6 +121,7 @@ void block(lexeme *list)
 
 	if (earlyHalt)
 	{
+		printf("Early halt detected.");
 		return;
 	}
 
@@ -126,24 +129,27 @@ void block(lexeme *list)
 
 	if (earlyHalt)
 	{
+		printf("Early halt detected.");
 		return;
 	}
 
+	printf("In block setting table index %d to %d\n", procedure_idx, cIndex * 3);
 	table[procedure_idx].addr = cIndex * 3;
 
 	if (currLevel == 0)
 	{
-		emit(6, currLevel, x);
+		emit(6, 0, x);
 	}
 	else
 	{
-		emit(6, currLevel, x + 3);
+		emit(6, 0, x + 3);
 	}
 
 	statement(list);
 
 	if (earlyHalt)
 	{
+		printf("Early halt detected.");
 		return;
 	}
 
@@ -161,6 +167,9 @@ void constDeclaration(lexeme *list)
 		do
 		{
 			lIndex++;
+			if (list[lIndex].name != NULL)
+				printf("Read symbol %s\n", list[lIndex].name);
+			printf("Read symbol %d\n", list[lIndex].type);
 			if (list[lIndex].type != identsym)
 			{
 				// Const must have an identifier after it.
@@ -182,6 +191,9 @@ void constDeclaration(lexeme *list)
 			strcpy(savedName, list[lIndex].name);
 
 			lIndex++;
+			if (list[lIndex].name != NULL)
+				printf("Read symbol %s\n", list[lIndex].name);
+			printf("Read symbol %d\n", list[lIndex].type);
 			if (list[lIndex].type != assignsym)
 			{
 				// Identifier must have := after it.
@@ -191,6 +203,10 @@ void constDeclaration(lexeme *list)
 			}
 
 			lIndex++;
+			if (list[lIndex].name != NULL)
+				printf("Read symbol %s\n", list[lIndex].name);
+			printf("Read symbol %d\n", list[lIndex].type);
+
 			if (list[lIndex].type != numbersym)
 			{
 				// := must have a number after it.
@@ -202,6 +218,10 @@ void constDeclaration(lexeme *list)
 			addToSymbolTable(1, savedName, list[lIndex].value, currLevel, 0, 0);
 
 			lIndex++;
+			if (list[lIndex].name != NULL)
+				printf("Read symbol %s\n", list[lIndex].name);
+			printf("Read symbol %d\n", list[lIndex].type);
+
 		} while (list[lIndex].type == commasym);
 
 		if (list[lIndex].type != semicolonsym)
@@ -221,6 +241,9 @@ void constDeclaration(lexeme *list)
 		}
 
 		lIndex++;
+		if (list[lIndex].name != NULL)
+			printf("Read symbol %s\n", list[lIndex].name);
+		printf("Read symbol %d\n", list[lIndex].type);
 	}
 }
 
@@ -228,10 +251,14 @@ int varDeclaration(lexeme *list)
 {
 	int numVars = 0;
 	if (list[lIndex].type == varsym)
+	{
 		do
 		{
 			numVars++;
 			lIndex++;
+			if (list[lIndex].name != NULL)
+				printf("Read symbol %s\n", list[lIndex].name);
+			printf("Read symbol %d\n", list[lIndex].type);
 
 			if (list[lIndex].type != identsym)
 			{
@@ -259,26 +286,33 @@ int varDeclaration(lexeme *list)
 			}
 
 			lIndex++;
+			if (list[lIndex].name != NULL)
+				printf("Read symbol %s\n", list[lIndex].name);
+			printf("Read symbol %d\n", list[lIndex].type);
 
 		} while (list[lIndex].type == commasym);
 
-	if (list[lIndex].type != semicolonsym)
-	{
-		if (list[lIndex].type == identsym)
+		if (list[lIndex].type != semicolonsym)
 		{
-			printparseerror(13);
-			earlyHalt = 1;
-			return -1;
+			if (list[lIndex].type == identsym)
+			{
+				printparseerror(13);
+				earlyHalt = 1;
+				return -1;
+			}
+			else
+			{
+				printparseerror(14);
+				earlyHalt = 1;
+				return -1;
+			}
 		}
-		else
-		{
-			printparseerror(14);
-			earlyHalt = 1;
-			return -1;
-		}
-	}
 
-	lIndex++;
+		lIndex++;
+		if (list[lIndex].name != NULL)
+			printf("Read symbol %s\n", list[lIndex].name);
+		printf("Read symbol %d\n", list[lIndex].type);
+	}
 
 	return numVars;
 }
@@ -290,6 +324,9 @@ void procedureDeclaration(lexeme *list)
 	while (list[lIndex].type == procsym)
 	{
 		lIndex += 1;
+		if (list[lIndex].name != NULL)
+			printf("Read symbol %s\n", list[lIndex].name);
+		printf("Read symbol %d\n", list[lIndex].type);
 
 		if (list[lIndex].type != identsym)
 		{
@@ -307,7 +344,12 @@ void procedureDeclaration(lexeme *list)
 			printparseerror(18);
 		}
 
+		addToSymbolTable(3, list[lIndex].name, 0, currLevel, 0, 0);
+
 		lIndex += 1;
+		if (list[lIndex].name != NULL)
+			printf("Read symbol %s\n", list[lIndex].name);
+		printf("Read symbol %d\n", list[lIndex].type);
 
 		if (list[lIndex].type != semicolonsym)
 		{
@@ -318,6 +360,9 @@ void procedureDeclaration(lexeme *list)
 		}
 
 		lIndex += 1;
+		if (list[lIndex].name != NULL)
+			printf("Read symbol %s\n", list[lIndex].name);
+		printf("Read symbol %d\n", list[lIndex].type);
 
 		block(list);
 
@@ -330,6 +375,9 @@ void procedureDeclaration(lexeme *list)
 		}
 
 		lIndex += 1;
+		if (list[lIndex].name != NULL)
+			printf("Read symbol %s\n", list[lIndex].name);
+		printf("Read symbol %d\n", list[lIndex].type);
 
 		// emit RTN
 		emit(2, 0, 0);
@@ -338,15 +386,15 @@ void procedureDeclaration(lexeme *list)
 
 void statement(lexeme *list)
 {
-	lexeme token = list[lIndex];
+	//lexeme token = list[lIndex];
 
-	if (token.type == identsym)
+	if (list[lIndex].type == identsym)
 	{
-		int symIdx = findSymbol(token, 2);
+		int symIdx = findSymbol(list[lIndex], 2);
 
 		if (symIdx == -1)
 		{
-			if (findSymbol(token, 1) != findSymbol(token, 3))
+			if (findSymbol(list[lIndex], 1) != findSymbol(list[lIndex], 3))
 			{
 				// Identifier is not a variable?
 				printparseerror(6);
@@ -363,9 +411,11 @@ void statement(lexeme *list)
 		}
 
 		lIndex++;
-		token = list[lIndex];
+		if (list[lIndex].name != NULL)
+			printf("Read symbol %s\n", list[lIndex].name);
+		printf("Read symbol %d\n", list[lIndex].type);
 
-		if (token.type != assignsym)
+		if (list[lIndex].type != assignsym)
 		{
 			// Ident must be followed by :=
 			printparseerror(7);
@@ -374,7 +424,9 @@ void statement(lexeme *list)
 		}
 
 		lIndex++;
-		token = list[lIndex];
+		if (list[lIndex].name != NULL)
+			printf("Read symbol %s\n", list[lIndex].name);
+		printf("Read symbol %d\n", list[lIndex].type);
 
 		expression(list);
 
@@ -388,12 +440,15 @@ void statement(lexeme *list)
 		return;
 	}
 
-	if (token.type == beginsym)
+	if (list[lIndex].type == beginsym)
 	{
 		do
 		{
 			lIndex++;
-			token = list[lIndex];
+			if (list[lIndex].name != NULL)
+				printf("Read symbol %s\n", list[lIndex].name);
+			printf("Read symbol %d\n", list[lIndex].type);
+
 			statement(list);
 
 			if (earlyHalt)
@@ -401,11 +456,11 @@ void statement(lexeme *list)
 				return;
 			}
 
-		} while (token.type == semicolonsym);
+		} while (list[lIndex].type == semicolonsym);
 
-		if (token.type != endsym)
+		if (list[lIndex].type != endsym)
 		{
-			if (token.type == identsym || token.type == beginsym || token.type == ifsym || token.type == whilesym || token.type == readsym || token.type == writesym || token.type == callsym)
+			if (list[lIndex].type == identsym || list[lIndex].type == beginsym || list[lIndex].type == ifsym || list[lIndex].type == whilesym || list[lIndex].type == readsym || list[lIndex].type == writesym || list[lIndex].type == callsym)
 			{
 				// End symbol expected, following above found instead.
 				printparseerror(15);
@@ -423,14 +478,19 @@ void statement(lexeme *list)
 		}
 
 		lIndex++;
-		token = list[lIndex];
+		if (list[lIndex].name != NULL)
+			printf("Read symbol %s\n", list[lIndex].name);
+		printf("Read symbol %d\n", list[lIndex].type);
 		return;
 	}
 
-	if (token.type == ifsym)
+	if (list[lIndex].type == ifsym)
 	{
 		lIndex++;
-		token = list[lIndex];
+		if (list[lIndex].name != NULL)
+			printf("Read symbol %s\n", list[lIndex].name);
+		printf("Read symbol %d\n", list[lIndex].type);
+
 		condition(list);
 
 		if (earlyHalt)
@@ -441,7 +501,7 @@ void statement(lexeme *list)
 		int jpcIdx = cIndex;
 		emit(8, 0, 0);
 
-		if (token.type != thensym)
+		if (list[lIndex].type != thensym)
 		{
 			// If must be followed by then
 			printparseerror(8);
@@ -450,7 +510,9 @@ void statement(lexeme *list)
 		}
 
 		lIndex++;
-		token = list[lIndex];
+		if (list[lIndex].name != NULL)
+			printf("Read symbol %s\n", list[lIndex].name);
+		printf("Read symbol %d\n", list[lIndex].type);
 
 		statement(list);
 
@@ -459,7 +521,7 @@ void statement(lexeme *list)
 			return;
 		}
 
-		if (token.type == elsesym)
+		if (list[lIndex].type == elsesym)
 		{
 			int jmpIdx = cIndex;
 			emit(7, 0, 0);
@@ -481,15 +543,17 @@ void statement(lexeme *list)
 		return;
 	}
 
-	if (token.type == whilesym)
+	if (list[lIndex].type == whilesym)
 	{
 		lIndex++;
-		token = list[lIndex];
+		if (list[lIndex].name != NULL)
+			printf("Read symbol %s\n", list[lIndex].name);
+		printf("Read symbol %d\n", list[lIndex].type);
 
 		int loopIdx = cIndex;
 		condition(list);
 
-		if (token.type != dosym)
+		if (list[lIndex].type != dosym)
 		{
 			// While must be followed by do
 			printparseerror(9);
@@ -498,7 +562,9 @@ void statement(lexeme *list)
 		}
 
 		lIndex++;
-		token = list[lIndex];
+		if (list[lIndex].name != NULL)
+			printf("Read symbol %s\n", list[lIndex].name);
+		printf("Read symbol %d\n", list[lIndex].type);
 
 		int jpcIdx = cIndex;
 		emit(8, 0, 0);
@@ -514,12 +580,14 @@ void statement(lexeme *list)
 
 		return;
 	}
-	if (token.type == readsym)
+	if (list[lIndex].type == readsym)
 	{
 		lIndex++;
-		token = list[lIndex];
+		if (list[lIndex].name != NULL)
+			printf("Read symbol %s\n", list[lIndex].name);
+		printf("Read symbol %d\n", list[lIndex].type);
 
-		if (token.type != identsym)
+		if (list[lIndex].type != identsym)
 		{
 			// Identifier is missing
 			printparseerror(6);
@@ -527,11 +595,11 @@ void statement(lexeme *list)
 			return;
 		}
 
-		int symIdx = findSymbol(token, 2);
+		int symIdx = findSymbol(list[lIndex], 2);
 
 		if (symIdx == -1)
 		{
-			if (findSymbol(token, 1) != findSymbol(token, 3))
+			if (findSymbol(list[lIndex], 1) != findSymbol(list[lIndex], 3))
 			{
 				// Identifier present is not a variable?
 				printparseerror(6);
@@ -548,16 +616,22 @@ void statement(lexeme *list)
 		}
 
 		lIndex++;
-		token = list[lIndex];
+		if (list[lIndex].name != NULL)
+			printf("Read symbol %s\n", list[lIndex].name);
+		printf("Read symbol %d\n", list[lIndex].type);
+
 		emit(9, 0, 2);
 		emit(4, currLevel - table[symIdx].level, table[symIdx].addr);
 
 		return;
 	}
-	if (token.type == writesym)
+	if (list[lIndex].type == writesym)
 	{
 		lIndex++;
-		token = list[lIndex];
+		if (list[lIndex].name != NULL)
+			printf("Read symbol %s\n", list[lIndex].name);
+		printf("Read symbol %d\n", list[lIndex].type);
+
 		expression(list);
 
 		if (earlyHalt)
@@ -569,15 +643,18 @@ void statement(lexeme *list)
 
 		return;
 	}
-	if (token.type == callsym)
+	if (list[lIndex].type == callsym)
 	{
 		lIndex++;
-		token = list[lIndex];
-		int symIdx = findSymbol(token, 3);
+		if (list[lIndex].name != NULL)
+			printf("Read symbol %s\n", list[lIndex].name);
+		printf("Read symbol %d\n", list[lIndex].type);
+
+		int symIdx = findSymbol(list[lIndex], 3);
 
 		if (symIdx == -1)
 		{
-			if (findSymbol(token, 1) != findSymbol(token, 2))
+			if (findSymbol(list[lIndex], 1) != findSymbol(list[lIndex], 2))
 			{
 				// Not a procedure?
 				printparseerror(7);
@@ -594,7 +671,10 @@ void statement(lexeme *list)
 		}
 
 		lIndex++;
-		token = list[lIndex];
+		if (list[lIndex].name != NULL)
+			printf("Read symbol %s\n", list[lIndex].name);
+		printf("Read symbol %d\n", list[lIndex].type);
+
 		emit(5, currLevel - table[symIdx].level, symIdx);
 
 		return;
@@ -635,6 +715,10 @@ void expression(lexeme *list)
 	if (list[lIndex].type == subsym)
 	{
 		lIndex++;
+		if (list[lIndex].name != NULL)
+			printf("Read symbol %s\n", list[lIndex].name);
+		printf("Read symbol %d\n", list[lIndex].type);
+
 		term(list);
 
 		if (earlyHalt)
@@ -648,6 +732,10 @@ void expression(lexeme *list)
 			if (list[lIndex].type == addsym)
 			{
 				lIndex++;
+				if (list[lIndex].name != NULL)
+					printf("Read symbol %s\n", list[lIndex].name);
+				printf("Read symbol %d\n", list[lIndex].type);
+
 				term(list);
 
 				if (earlyHalt)
@@ -660,6 +748,10 @@ void expression(lexeme *list)
 			else
 			{
 				lIndex++;
+				if (list[lIndex].name != NULL)
+					printf("Read symbol %s\n", list[lIndex].name);
+				printf("Read symbol %d\n", list[lIndex].type);
+
 				term(list);
 
 				if (earlyHalt)
@@ -675,7 +767,12 @@ void expression(lexeme *list)
 	else
 	{
 		if (list[lIndex].type == addsym)
+		{
 			lIndex++;
+			if (list[lIndex].name != NULL)
+				printf("Read symbol %s\n", list[lIndex].name);
+			printf("Read symbol %d\n", list[lIndex].type);
+		}
 
 		term(list);
 
@@ -689,6 +786,10 @@ void expression(lexeme *list)
 			if (list[lIndex].type == addsym)
 			{
 				lIndex++;
+				if (list[lIndex].name != NULL)
+					printf("Read symbol %s\n", list[lIndex].name);
+				printf("Read symbol %d\n", list[lIndex].type);
+
 				term(list);
 
 				if (earlyHalt)
@@ -701,6 +802,10 @@ void expression(lexeme *list)
 			else
 			{
 				lIndex++;
+				if (list[lIndex].name != NULL)
+					printf("Read symbol %s\n", list[lIndex].name);
+				printf("Read symbol %d\n", list[lIndex].type);
+
 				term(list);
 
 				if (earlyHalt)
@@ -727,6 +832,10 @@ void condition(lexeme *list)
 	if (list[lIndex].type == oddsym)
 	{
 		lIndex++;
+		if (list[lIndex].name != NULL)
+			printf("Read symbol %s\n", list[lIndex].name);
+		printf("Read symbol %d\n", list[lIndex].type);
+
 		expression(list);
 
 		if (earlyHalt)
@@ -741,6 +850,10 @@ void condition(lexeme *list)
 		if (list[lIndex].type == eqlsym)
 		{
 			lIndex++;
+			if (list[lIndex].name != NULL)
+				printf("Read symbol %s\n", list[lIndex].name);
+			printf("Read symbol %d\n", list[lIndex].type);
+
 			expression(list);
 
 			if (earlyHalt)
@@ -753,6 +866,10 @@ void condition(lexeme *list)
 		else if (list[lIndex].type == neqsym)
 		{
 			lIndex++;
+			if (list[lIndex].name != NULL)
+				printf("Read symbol %s\n", list[lIndex].name);
+			printf("Read symbol %d\n", list[lIndex].type);
+
 			expression(list);
 
 			if (earlyHalt)
@@ -765,6 +882,10 @@ void condition(lexeme *list)
 		else if (list[lIndex].type == lsssym)
 		{
 			lIndex++;
+			if (list[lIndex].name != NULL)
+				printf("Read symbol %s\n", list[lIndex].name);
+			printf("Read symbol %d\n", list[lIndex].type);
+
 			expression(list);
 
 			if (earlyHalt)
@@ -777,6 +898,10 @@ void condition(lexeme *list)
 		else if (list[lIndex].type == leqsym)
 		{
 			lIndex++;
+			if (list[lIndex].name != NULL)
+				printf("Read symbol %s\n", list[lIndex].name);
+			printf("Read symbol %d\n", list[lIndex].type);
+
 			expression(list);
 
 			if (earlyHalt)
@@ -789,6 +914,10 @@ void condition(lexeme *list)
 		else if (list[lIndex].type == gtrsym)
 		{
 			lIndex++;
+			if (list[lIndex].name != NULL)
+				printf("Read symbol %s\n", list[lIndex].name);
+			printf("Read symbol %d\n", list[lIndex].type);
+
 			expression(list);
 
 			if (earlyHalt)
@@ -801,6 +930,10 @@ void condition(lexeme *list)
 		else if (list[lIndex].type == geqsym)
 		{
 			lIndex++;
+			if (list[lIndex].name != NULL)
+				printf("Read symbol %s\n", list[lIndex].name);
+			printf("Read symbol %d\n", list[lIndex].type);
+
 			expression(list);
 
 			if (earlyHalt)
@@ -822,36 +955,53 @@ void condition(lexeme *list)
 
 void term(lexeme *list)
 {
-	lexeme token = list[lIndex];
-
 	factor(list);
 
 	if (earlyHalt)
 	{
+		printf("Early halt detected.");
 		return;
 	}
 
-	while (token.type == multsym || token.type == divsym || token.type == modsym)
+	while (list[lIndex].type == multsym || list[lIndex].type == divsym || list[lIndex].type == modsym)
 	{
-		lIndex++;
-		token = list[lIndex];
-		factor(list);
-
 		if (earlyHalt)
 		{
 			return;
 		}
 
-		if (token.type == multsym)
+		if (list[lIndex].type == multsym)
 		{
+			lIndex++;
+			if (list[lIndex].name != NULL)
+				printf("Read symbol %s\n", list[lIndex].name);
+			printf("Read symbol %d\n", list[lIndex].type);
+
+			factor(list);
+
 			emit(2, currLevel, 4);
 		}
-		else if (token.type == divsym)
+
+		else if (list[lIndex].type == divsym)
 		{
+			lIndex++;
+			if (list[lIndex].name != NULL)
+				printf("Read symbol %s\n", list[lIndex].name);
+			printf("Read symbol %d\n", list[lIndex].type);
+
+			factor(list);
+
 			emit(2, currLevel, 5);
 		}
 		else
 		{
+			lIndex++;
+			if (list[lIndex].name != NULL)
+				printf("Read symbol %s\n", list[lIndex].name);
+			printf("Read symbol %d\n", list[lIndex].type);
+
+			factor(list);
+
 			emit(2, currLevel, 7);
 		}
 	}
@@ -909,6 +1059,9 @@ void factor(lexeme *list)
 		}
 
 		lIndex += 1;
+		if (list[lIndex].name != NULL)
+			printf("Read symbol %s\n", list[lIndex].name);
+		printf("Read symbol %d\n", list[lIndex].type);
 	}
 
 	else if (list[lIndex].type == numbersym)
@@ -916,11 +1069,18 @@ void factor(lexeme *list)
 		// emit LIT (What is M? Is it the number?)
 		emit(1, 0, list[lIndex].value);
 		lIndex += 1;
+		if (list[lIndex].name != NULL)
+			printf("Read symbol %s\n", list[lIndex].name);
+		printf("Read symbol %d\n", list[lIndex].type);
 	}
 
-	else if (list[tIndex].type == lparensym)
+	else if (list[lIndex].type == lparensym)
 	{
 		lIndex += 1;
+		if (list[lIndex].name != NULL)
+			printf("Read symbol %s\n", list[lIndex].name);
+		printf("Read symbol %d\n", list[lIndex].type);
+
 		expression(list);
 
 		if (earlyHalt)
@@ -928,7 +1088,7 @@ void factor(lexeme *list)
 			return;
 		}
 
-		if (list[tIndex].type != rparensym)
+		if (list[lIndex].type != rparensym)
 		{
 			// '(' must be followed by ')'
 			printparseerror(12);
@@ -937,6 +1097,10 @@ void factor(lexeme *list)
 		}
 
 		lIndex += 1;
+		if (list[lIndex].name != NULL)
+			printf("Read symbol %s\n", list[lIndex].name);
+		printf("Read symbol %d\n", list[lIndex].type);
+
 	}
 
 	else
@@ -951,25 +1115,27 @@ void factor(lexeme *list)
 // Finds the correct symbol name with a linear search.
 int findSymbol(lexeme symbol, int kind)
 {
-	int i;
+	int i, retVal = -1, maxLevel = -1;
 
-	for (i = tIndex - 1; i >= 0; i--)
+	for (i = 0; i < tIndex; i++)
 	{
 		// Check if the entry has the correct name.
 		if (strcmp(symbol.name, table[i].name) == 0)
 		{
-			// Check if the entry has the correct kind value and is unmarked.
-			if (kind == table[i].kind && table[i].mark == 0)
+			// Check if the entry has the correct kind value and is unmarked and maximize the level.
+			if (kind == table[i].kind && table[i].mark == 0 && table[i].level > maxLevel)
 			{
-				return 1;
+				retVal = i;
+				maxLevel = table[i].level;
 			}
 		}
 	}
-	return -1;
+	return retVal;
 }
 
 void emit(int opname, int level, int mvalue)
 {
+	printf("Emitting opcode %d, level %d, mvalue %d\n", opname, level, mvalue);
 	code[cIndex].opcode = opname;
 	code[cIndex].l = level;
 	code[cIndex].m = mvalue;
@@ -978,6 +1144,7 @@ void emit(int opname, int level, int mvalue)
 
 void addToSymbolTable(int k, char n[], int v, int l, int a, int m)
 {
+	printf("Adding to symbol table kind = %d, n = %s, v = %d, l = %d, a = %d, m = %d\n", k, n, v, l, a, m);
 	table[tIndex].kind = k;
 	strcpy(table[tIndex].name, n);
 	table[tIndex].val = v;
