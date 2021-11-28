@@ -499,7 +499,7 @@ void statement(lexeme *list)
 		}
 
 		int jpcIdx = cIndex;
-		emit(8, 0, 0);
+		emit(8, 0, code[jpcIdx].m);
 
 		if (list[lIndex].type != thensym)
 		{
@@ -524,7 +524,7 @@ void statement(lexeme *list)
 		if (list[lIndex].type == elsesym)
 		{
 			int jmpIdx = cIndex;
-			emit(7, 0, 0);
+			emit(7, 0, code[jpcIdx].m);
 			code[jpcIdx].m = cIndex * 3;
 			statement(list);
 
@@ -743,7 +743,7 @@ void expression(lexeme *list)
 					return;
 				}
 
-				emit(2, currLevel, 2); // Emit ADD
+				emit(2, 0, 2); // Emit ADD
 			}
 			else
 			{
@@ -759,7 +759,7 @@ void expression(lexeme *list)
 					return;
 				}
 
-				emit(2, currLevel, 3); // Emit SUB
+				emit(2, 0, 3); // Emit SUB
 			}
 		}
 	}
@@ -797,7 +797,7 @@ void expression(lexeme *list)
 					return;
 				}
 
-				emit(2, currLevel, 2); // Emit ADD
+				emit(2, 0, 2); // Emit ADD
 			}
 			else
 			{
@@ -843,10 +843,11 @@ void condition(lexeme *list)
 			return;
 		}
 
-		emit(2, currLevel, 6); // Emit ODD
+		emit(2, 0, 6); // Emit ODD
 	}
 	else
 	{
+		expression(list);
 		if (list[lIndex].type == eqlsym)
 		{
 			lIndex++;
@@ -861,7 +862,7 @@ void condition(lexeme *list)
 				return;
 			}
 
-			emit(2, currLevel, 8); // Emit EQL
+			emit(2, 0, 8); // Emit EQL
 		}
 		else if (list[lIndex].type == neqsym)
 		{
@@ -877,7 +878,7 @@ void condition(lexeme *list)
 				return;
 			}
 
-			emit(2, currLevel, 9); // Emit NEQ
+			emit(2, 0, 9); // Emit NEQ
 		}
 		else if (list[lIndex].type == lsssym)
 		{
@@ -893,7 +894,7 @@ void condition(lexeme *list)
 				return;
 			}
 
-			emit(2, currLevel, 10); // Emit LSS
+			emit(2, 0, 10); // Emit LSS
 		}
 		else if (list[lIndex].type == leqsym)
 		{
@@ -909,7 +910,7 @@ void condition(lexeme *list)
 				return;
 			}
 
-			emit(2, currLevel, 11); // Emit LEQ
+			emit(2, 0, 11); // Emit LEQ
 		}
 		else if (list[lIndex].type == gtrsym)
 		{
@@ -925,7 +926,7 @@ void condition(lexeme *list)
 				return;
 			}
 
-			emit(2, currLevel, 12); // Emit GTR
+			emit(2, 0, 12); // Emit GTR
 		}
 		else if (list[lIndex].type == geqsym)
 		{
@@ -941,7 +942,7 @@ void condition(lexeme *list)
 				return;
 			}
 
-			emit(2, currLevel, 13); // Emit GEQ
+			emit(2, 0, 13); // Emit GEQ
 		}
 		else
 		{
@@ -979,7 +980,7 @@ void term(lexeme *list)
 
 			factor(list);
 
-			emit(2, currLevel, 4);
+			emit(2, 0, 4);
 		}
 
 		else if (list[lIndex].type == divsym)
@@ -991,7 +992,7 @@ void term(lexeme *list)
 
 			factor(list);
 
-			emit(2, currLevel, 5);
+			emit(2, 0, 5);
 		}
 		else
 		{
@@ -1002,7 +1003,7 @@ void term(lexeme *list)
 
 			factor(list);
 
-			emit(2, currLevel, 7);
+			emit(2, 0, 7);
 		}
 	}
 }
