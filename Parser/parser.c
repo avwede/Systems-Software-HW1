@@ -46,8 +46,6 @@ instruction *parse(lexeme *list, int printTable, int printCode)
 	}
 
 	code[cIndex].opcode = -1;
-	printTable = 1;
-	printCode = 1;
 
 	if (printTable)
 	{
@@ -74,6 +72,10 @@ void program(lexeme *list)
 
 	block(list);
 
+	if (earlyHalt)
+	{
+		return;
+	}
 
 	// Check if the code ends with a period.
 	if (list[lIndex].type != periodsym)
@@ -723,6 +725,12 @@ void condition(lexeme *list)
 	else
 	{
 		expression(list);
+
+		if (earlyHalt)
+		{
+			return;
+		}
+
 		if (list[lIndex].type == eqlsym)
 		{
 			lIndex++;
@@ -815,6 +823,10 @@ void term(lexeme *list)
 {
 	factor(list);
 
+	if (earlyHalt)
+	{
+		return;
+	}
 
 	while (list[lIndex].type == multsym || list[lIndex].type == divsym || list[lIndex].type == modsym)
 	{
@@ -829,6 +841,11 @@ void term(lexeme *list)
 
 			factor(list);
 
+			if (earlyHalt)
+			{
+				return;
+			}
+
 			emit(2, 0, 4);
 		}
 
@@ -838,6 +855,11 @@ void term(lexeme *list)
 
 			factor(list);
 
+		if (earlyHalt)
+		{
+			return;
+		}
+
 			emit(2, 0, 5);
 		}
 		else
@@ -845,6 +867,11 @@ void term(lexeme *list)
 			lIndex++;
 
 			factor(list);
+
+			if (earlyHalt)
+			{
+				return;
+			}
 
 			emit(2, 0, 7);
 		}
