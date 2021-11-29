@@ -387,6 +387,7 @@ void procedureDeclaration(lexeme *list)
 void statement(lexeme *list)
 {
 	//lexeme token = list[lIndex];
+	printf("%d", list[lIndex].type);
 
 	if (list[lIndex].type == identsym)
 	{
@@ -444,6 +445,7 @@ void statement(lexeme *list)
 	{
 		do
 		{
+			printf("%d", list[lIndex].type);
 			lIndex++;
 			if (list[lIndex].name != NULL)
 				printf("Read symbol %s\n", list[lIndex].name);
@@ -463,6 +465,7 @@ void statement(lexeme *list)
 			if (list[lIndex].type == identsym || list[lIndex].type == beginsym || list[lIndex].type == ifsym || list[lIndex].type == whilesym || list[lIndex].type == readsym || list[lIndex].type == writesym || list[lIndex].type == callsym)
 			{
 				// End symbol expected, following above found instead.
+				printf("%d", list[lIndex].type);
 				printparseerror(15);
 				earlyHalt = 1;
 				return;
@@ -471,6 +474,7 @@ void statement(lexeme *list)
 			else
 			{
 				// End symbol expected, following above not found.
+				printf("%d", list[lIndex].type);
 				printparseerror(16);
 				earlyHalt = 1;
 				return;
@@ -526,6 +530,12 @@ void statement(lexeme *list)
 			int jmpIdx = cIndex;
 			emit(7, 0, 0);
 			code[jpcIdx].m = cIndex * 3;
+
+			lIndex++;
+			if (list[lIndex].name != NULL)
+				printf("Read symbol %s\n", list[lIndex].name);
+			printf("Read symbol %d\n", list[lIndex].type);
+
 			statement(list);
 
 			if (earlyHalt)
@@ -676,8 +686,6 @@ void statement(lexeme *list)
 		printf("Read symbol %d\n", list[lIndex].type);
 
 		emit(5, currLevel - table[symIdx].level, symIdx);
-
-		return;
 	}
 }
 
