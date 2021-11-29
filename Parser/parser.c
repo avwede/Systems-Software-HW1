@@ -363,7 +363,7 @@ void statement(lexeme *list)
 		if (list[lIndex].type != assignsym)
 		{
 			// Ident must be followed by :=
-			printparseerror(7);
+			printparseerror(5);
 			earlyHalt = 1;
 			return;
 		}
