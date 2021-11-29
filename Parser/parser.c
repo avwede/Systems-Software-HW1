@@ -108,11 +108,24 @@ void block(lexeme *list)
 	int procedure_idx = tIndex - 1;
 	constDeclaration(list);
 
+	if (earlyHalt)
+	{
+		return;
+	}
 
 	int x = varDeclaration(list);
 
+	if (earlyHalt)
+	{
+		return;
+	}
 
 	procedureDeclaration(list);
+
+	if (earlyHalt)
+	{
+		return;
+	}
 
 	table[procedure_idx].addr = cIndex * 3;
 
@@ -126,8 +139,7 @@ void block(lexeme *list)
 	}
 
 	statement(list);
-
-
+	
 	mark();
 	currLevel--;
 }
@@ -182,7 +194,6 @@ void constDeclaration(lexeme *list)
 			}
 
 			addToSymbolTable(1, savedName, list[lIndex].value, currLevel, 0, 0);
-
 			lIndex++;
 
 		} while (list[lIndex].type == commasym);
@@ -583,7 +594,7 @@ void statement(lexeme *list)
 void mark()
 {
 	int i;
-	for (i = tIndex; i >= 0; i--)
+	for (i = tIndex - 1; i >= 0; i--)
 	{
 		if (table[i].mark == 0)
 		{
