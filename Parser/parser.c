@@ -483,6 +483,11 @@ void statement(lexeme *list)
 		int loopIdx = cIndex;
 		condition(list);
 
+		if (earlyHalt)
+		{
+			return;
+		}
+
 		if (list[lIndex].type != dosym)
 		{
 			// While must be followed by do
@@ -866,10 +871,10 @@ void term(lexeme *list)
 
 			factor(list);
 
-		if (earlyHalt)
-		{
-			return;
-		}
+			if (earlyHalt)
+			{
+				return;
+			}
 
 			emit(2, 0, 5);
 		}
@@ -970,7 +975,6 @@ void factor(lexeme *list)
 		}
 
 		lIndex += 1;
-
 	}
 
 	else
