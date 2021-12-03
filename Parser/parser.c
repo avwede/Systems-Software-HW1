@@ -1,3 +1,6 @@
+// Systems Software Fall 2021
+// Group 5 - Nicholas Gray, Abraham Hernandez, Prathik Ramesh, Ashley Voglewede
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -38,6 +41,8 @@ instruction *parse(lexeme *list, int printTable, int printCode)
 	code = malloc(MAX_CODE_LENGTH * sizeof(instruction));
 	table = malloc(MAX_SYMBOL_COUNT * sizeof(symbol));
 
+	// Every function that can return early has an earlyHalt
+	// check directly afterwards.
 	program(list);
 
 	if (earlyHalt)
@@ -70,6 +75,7 @@ void program(lexeme *list)
 
 	currLevel = -1;
 
+	// Go through all the code itself.
 	block(list);
 
 	if (earlyHalt)
@@ -80,6 +86,7 @@ void program(lexeme *list)
 	// Check if the code ends with a period.
 	if (list[lIndex].type != periodsym)
 	{
+		// Program has to end with a period.
 		printparseerror(1);
 		earlyHalt = 1;
 		return;
@@ -106,6 +113,8 @@ void block(lexeme *list)
 {
 	currLevel++;
 	int procedure_idx = tIndex - 1;
+
+	// Check for declaration of constants.
 	constDeclaration(list);
 
 	if (earlyHalt)
@@ -113,6 +122,7 @@ void block(lexeme *list)
 		return;
 	}
 
+	// Check for declaration of variables.
 	int x = varDeclaration(list);
 
 	if (earlyHalt)
@@ -120,6 +130,7 @@ void block(lexeme *list)
 		return;
 	}
 
+	// Check for declaration of procedures.
 	procedureDeclaration(list);
 
 	if (earlyHalt)
@@ -131,15 +142,19 @@ void block(lexeme *list)
 
 	if (currLevel == 0)
 	{
+		// emit INC, M = x
 		emit(6, 0, x);
 	}
 	else
 	{
+		// emit INC, M = x + 3
 		emit(6, 0, x + 3);
 	}
 
+	// Statement follows grammar, as per the grammar.
 	statement(list);
 	
+	// Mark variables that are in scope.
 	mark();
 	currLevel--;
 }
@@ -149,6 +164,7 @@ void constDeclaration(lexeme *list)
 {
 	int symidx = 0;
 
+	// Check if our current token is a constant.
 	if (list[lIndex].type == constsym)
 	{
 		do
@@ -156,7 +172,7 @@ void constDeclaration(lexeme *list)
 			lIndex++;
 			if (list[lIndex].type != identsym)
 			{
-				// Const must have an identifier after it.
+				// Const must have an identifier name after it.
 				printparseerror(2);
 				earlyHalt = 1;
 				return;
@@ -166,6 +182,7 @@ void constDeclaration(lexeme *list)
 			if (symidx != -1)
 			{
 				// Declaration already found in symbol tree.
+				// I.e. names are being repeated.
 				printparseerror(18);
 				earlyHalt = 1;
 				return;
@@ -177,7 +194,7 @@ void constDeclaration(lexeme *list)
 			lIndex++;
 			if (list[lIndex].type != assignsym)
 			{
-				// Identifier must have := after it.
+				// Identifier names must have := after it.
 				printparseerror(2);
 				earlyHalt = 1;
 				return;
@@ -193,21 +210,25 @@ void constDeclaration(lexeme *list)
 				return;
 			}
 
+			// Add the constant to the symbol table.
 			addToSymbolTable(1, savedName, list[lIndex].value, currLevel, 0, 0);
 			lIndex++;
 
 		} while (list[lIndex].type == commasym);
 
+		// Constant declarations have to end with semicolons.
 		if (list[lIndex].type != semicolonsym)
 		{
 			if (list[lIndex].type == identsym)
 			{
+				// Multiple constant declarations need to be separated by commas.
 				printparseerror(13);
 				earlyHalt = 1;
 				return;
 			}
 			else
 			{
+				// Constant declarations need to be closed by semicolons.
 				printparseerror(14);
 				earlyHalt = 1;
 				return;
@@ -218,9 +239,12 @@ void constDeclaration(lexeme *list)
 	}
 }
 
+// Variable declarations should follow the pattern "var" ident {"," ident} “;"
 int varDeclaration(lexeme *list)
 {
 	int numVars = 0;
+
+	// Check if our current symbol is a variable.
 	if (list[lIndex].type == varsym)
 	{
 		do
@@ -230,6 +254,7 @@ int varDeclaration(lexeme *list)
 
 			if (list[lIndex].type != identsym)
 			{
+				// Needs to follow the pattern above.
 				printparseerror(3);
 				earlyHalt = 1;
 				return -1;
@@ -239,11 +264,13 @@ int varDeclaration(lexeme *list)
 
 			if (symidx != -1)
 			{
+				// A variable name has already been used elsewhere.
 				printparseerror(18);
 				earlyHalt = 1;
 				return -1;
 			}
 
+			// Add the variable to the symbol table.
 			if (currLevel == 0)
 			{
 				addToSymbolTable(2, list[lIndex].name, 0, currLevel, numVars - 1, 0);
@@ -257,16 +284,19 @@ int varDeclaration(lexeme *list)
 
 		} while (list[lIndex].type == commasym);
 
+		// Variable declaration needs to end with a semicolon.
 		if (list[lIndex].type != semicolonsym)
 		{
 			if (list[lIndex].type == identsym)
 			{
+				// Multiple variable delcarations must be separated by commas.
 				printparseerror(13);
 				earlyHalt = 1;
 				return -1;
 			}
 			else
 			{
+				// Variable declarations need to end with a semicolon.
 				printparseerror(14);
 				earlyHalt = 1;
 				return -1;
@@ -279,10 +309,12 @@ int varDeclaration(lexeme *list)
 	return numVars;
 }
 
+// Procedure declarations should follow the pattern "procedure" ident ";" block ";"
 void procedureDeclaration(lexeme *list)
 {
 	int symidx;
 
+	// Check if the current symbol is a procedure.
 	while (list[lIndex].type == procsym)
 	{
 		lIndex += 1;
@@ -334,6 +366,7 @@ void procedureDeclaration(lexeme *list)
 	}
 }
 
+// Checks the grammar of the statement
 void statement(lexeme *list)
 {
 	if (list[lIndex].type == identsym)
@@ -344,14 +377,14 @@ void statement(lexeme *list)
 		{
 			if (findSymbol(list[lIndex], 1) != findSymbol(list[lIndex], 3))
 			{
-				// Identifier is not a variable?
+				// Identifier is not a variable, but a procedure.
 				printparseerror(6);
 				earlyHalt = 1;
 				return;
 			}
 			else
 			{
-				// Undeclared identifier?
+				// Undeclared identifier
 				printparseerror(19);
 				earlyHalt = 1;
 				return;
@@ -377,6 +410,7 @@ void statement(lexeme *list)
 			return;
 		}
 
+		// emit STO, L = currLevel - table[symIdx].level, M = table[symIdx].addr
 		emit(4, currLevel - table[symIdx].level, table[symIdx].addr);
 
 		return;
@@ -424,6 +458,7 @@ void statement(lexeme *list)
 	{
 		lIndex++;
 
+		// parse condition in loop.
 		condition(list);
 
 		if (earlyHalt)
@@ -432,6 +467,8 @@ void statement(lexeme *list)
 		}
 
 		int jpcIdx = cIndex;
+
+		// emit JPC
 		emit(8, 0, 0);
 
 		if (list[lIndex].type != thensym)
@@ -454,7 +491,10 @@ void statement(lexeme *list)
 		if (list[lIndex].type == elsesym)
 		{
 			int jmpIdx = cIndex;
+
+			// emit JMP
 			emit(7, 0, 0);
+
 			code[jpcIdx].m = cIndex * 3;
 
 			lIndex++;
@@ -481,6 +521,8 @@ void statement(lexeme *list)
 		lIndex++;
 
 		int loopIdx = cIndex;
+
+		// parse condition in loop.
 		condition(list);
 
 		if (earlyHalt)
@@ -499,7 +541,10 @@ void statement(lexeme *list)
 		lIndex++;
 
 		int jpcIdx = cIndex;
+
+		// emit JPC
 		emit(8, 0, 0);
+
 		statement(list);
 
 		if (earlyHalt)
@@ -507,6 +552,7 @@ void statement(lexeme *list)
 			return;
 		}
 
+		// emit JMP, M = loopIdx * 3
 		emit(7, 0, loopIdx * 3);
 		code[jpcIdx].m = cIndex * 3;
 
@@ -530,14 +576,14 @@ void statement(lexeme *list)
 		{
 			if (findSymbol(list[lIndex], 1) != findSymbol(list[lIndex], 3))
 			{
-				// Identifier present is not a variable?
+				// Identifier present is not a variable
 				printparseerror(6);
 				earlyHalt = 1;
 				return;
 			}
 			else
 			{
-				// Undeclared identifier?
+				// Undeclared identifier
 				printparseerror(19);
 				earlyHalt = 1;
 				return;
@@ -546,6 +592,7 @@ void statement(lexeme *list)
 
 		lIndex++;
 
+		// emit READ, then STO
 		emit(9, 0, 2);
 		emit(4, currLevel - table[symIdx].level, table[symIdx].addr);
 
@@ -562,6 +609,7 @@ void statement(lexeme *list)
 			return;
 		}
 
+		// emit WRITE
 		emit(9, 0, 1);
 
 		return;
@@ -576,14 +624,14 @@ void statement(lexeme *list)
 		{
 			if (findSymbol(list[lIndex], 1) != findSymbol(list[lIndex], 2))
 			{
-				// Not a procedure?
+				// Not a procedure
 				printparseerror(7);
 				earlyHalt = 1;
 				return;
 			}
 			else
 			{
-				// Undeclared identifier?
+				// Undeclared identifier
 				printparseerror(19);
 				earlyHalt = 1;
 				return;
@@ -592,10 +640,12 @@ void statement(lexeme *list)
 
 		lIndex++;
 
+		// emit CAL
 		emit(5, currLevel - table[symIdx].level, symIdx);
 	}
 }
 
+// Marks variables that are currently in scope.
 void mark()
 {
 	int i;
@@ -612,6 +662,7 @@ void mark()
 	}
 }
 
+// check if there have been multiple declarations of an identifier name.
 int multipleDeclarationCheck(lexeme l)
 {
 	int i;
@@ -623,104 +674,6 @@ int multipleDeclarationCheck(lexeme l)
 	}
 
 	return -1;
-}
-
-void expression(lexeme *list)
-{
-	if (list[lIndex].type == subsym)
-	{
-		lIndex++;
-
-		term(list);
-
-		if (earlyHalt)
-		{
-			return;
-		}
-
-		emit(2, currLevel, 1); // Emit NEG
-		while (list[lIndex].type == addsym || list[lIndex].type == subsym)
-		{
-			if (list[lIndex].type == addsym)
-			{
-				lIndex++;
-				term(list);
-
-				if (earlyHalt)
-				{
-					return;
-				}
-
-				emit(2, 0, 2); // Emit ADD
-			}
-			else
-			{
-				lIndex++;
-
-				term(list);
-
-				if (earlyHalt)
-				{
-					return;
-				}
-
-				emit(2, 0, 3); // Emit SUB
-			}
-		}
-	}
-
-	else
-	{
-		if (list[lIndex].type == addsym)
-		{
-			lIndex++;
-		}
-
-		term(list);
-
-		if (earlyHalt)
-		{
-			return;
-		}
-
-		while (list[lIndex].type == addsym || list[lIndex].type == subsym)
-		{
-			if (list[lIndex].type == addsym)
-			{
-				lIndex++;
-
-				term(list);
-
-				if (earlyHalt)
-				{
-					return;
-				}
-
-				emit(2, 0, 2); // Emit ADD
-			}
-			else
-			{
-				lIndex++;
-
-				term(list);
-
-				if (earlyHalt)
-				{
-					return;
-				}
-
-				emit(2, currLevel, 3); // Emit SUB
-			}
-		}
-	}
-
-	if (list[lIndex].type == lparensym || list[lIndex].type == identsym ||
-		list[lIndex].type == numbersym || list[lIndex].type == oddsym)
-	{
-		printparseerror(17);
-		earlyHalt = 1;
-		return;
-	}
 }
 
 void condition(lexeme *list)
@@ -835,6 +788,106 @@ void condition(lexeme *list)
 	}
 }
 
+// Parse mathematical expressions
+void expression(lexeme *list)
+{
+	if (list[lIndex].type == subsym)
+	{
+		lIndex++;
+
+		term(list);
+
+		if (earlyHalt)
+		{
+			return;
+		}
+
+		emit(2, currLevel, 1); // Emit NEG
+		while (list[lIndex].type == addsym || list[lIndex].type == subsym)
+		{
+			if (list[lIndex].type == addsym)
+			{
+				lIndex++;
+				term(list);
+
+				if (earlyHalt)
+				{
+					return;
+				}
+
+				emit(2, 0, 2); // Emit ADD
+			}
+			else
+			{
+				lIndex++;
+
+				term(list);
+
+				if (earlyHalt)
+				{
+					return;
+				}
+
+				emit(2, 0, 3); // Emit SUB
+			}
+		}
+	}
+
+	else
+	{
+		if (list[lIndex].type == addsym)
+		{
+			lIndex++;
+		}
+
+		term(list);
+
+		if (earlyHalt)
+		{
+			return;
+		}
+
+		while (list[lIndex].type == addsym || list[lIndex].type == subsym)
+		{
+			if (list[lIndex].type == addsym)
+			{
+				lIndex++;
+
+				term(list);
+
+				if (earlyHalt)
+				{
+					return;
+				}
+
+				emit(2, 0, 2); // Emit ADD
+			}
+			else
+			{
+				lIndex++;
+
+				term(list);
+
+				if (earlyHalt)
+				{
+					return;
+				}
+
+				emit(2, currLevel, 3); // Emit SUB
+			}
+		}
+	}
+
+	if (list[lIndex].type == lparensym || list[lIndex].type == identsym ||
+		list[lIndex].type == numbersym || list[lIndex].type == oddsym)
+	{
+		// Bad arithmetic, check your math.
+		printparseerror(17);
+		earlyHalt = 1;
+		return;
+	}
+}
+
 void term(lexeme *list)
 {
 	factor(list);
@@ -862,6 +915,7 @@ void term(lexeme *list)
 				return;
 			}
 
+			// emit MUL
 			emit(2, 0, 4);
 		}
 
@@ -876,6 +930,7 @@ void term(lexeme *list)
 				return;
 			}
 
+			// emit DIV
 			emit(2, 0, 5);
 		}
 		else
@@ -889,6 +944,7 @@ void term(lexeme *list)
 				return;
 			}
 
+			// emit MOD
 			emit(2, 0, 7);
 		}
 	}
@@ -923,7 +979,8 @@ void factor(lexeme *list)
 			}
 		}
 
-		if (symIdx_var == -1) // const
+		// constant
+		if (symIdx_var == -1)
 		{
 			// emit LIT
 			M = table[symIdx_const].val;
